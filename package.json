@@ -8,5 +8,13 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.3"
+  },
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "test": "bun test src/__tests__/",
+    "typecheck": "tsc --noEmit"
   }
 }
