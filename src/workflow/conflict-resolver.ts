@@ -19,7 +19,8 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
     socio: ["认同", "规范", "共同体"],
     governance: ["权力", "执行", "监督"],
     culture: ["仪式", "符号", "认同"],
-    risk: ["崩溃", "储备", "缓冲"]
+    risk: ["崩溃", "储备", "缓冲"],
+    validation: ["可证伪", "反例", "验证"]
   };
 
   for (let i = 0; i < outputs.length; i++) {
@@ -27,11 +28,17 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
       const agentA = outputs[i];
       const agentB = outputs[j];
 
-      const keywordsA = conclusionKeywords[agentA.agentType] || [];
-      const keywordsB = conclusionKeywords[agentB.agentType] || [];
+      // Guard against undefined agents (shouldn't happen for well-formed inputs)
+      if (!agentA || !agentB) continue;
 
-      const hasConflict = agentB.falsifiable.toLowerCase().includes(keywordsA.join("|")) ||
-                        agentA.falsifiable.toLowerCase().includes(keywordsB.join("|"));
+      const keywordsA = conclusionKeywords[agentA.agentType as keyof typeof conclusionKeywords] || [];
+      const keywordsB = conclusionKeywords[agentB.agentType as keyof typeof conclusionKeywords] || [];
+
+      const falsifiableA = agentA.falsifiable ?? "";
+      const falsifiableB = agentB.falsifiable ?? "";
+
+      const hasConflict = falsifiableB.toLowerCase().includes(keywordsA.join("|")) ||
+                        falsifiableA.toLowerCase().includes(keywordsB.join("|"));
 
       if (hasConflict) {
         conflicts.push({
