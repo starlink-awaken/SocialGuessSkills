@@ -62,6 +62,12 @@ bun run examples/run-example.ts
 
 Claude会自动调用MCP Server,生成完整的社会体系模型。
 
+**📖 详细集成指南**: 查看 [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md) 了解：
+- Claude Desktop完整配置步骤
+- OpenCode CLI集成状态
+- 故障排除指南
+- 更多使用示例和Prompt模板
+
 ## 使用示例
 
 ### 1. 完整推演(reasoning tool)
