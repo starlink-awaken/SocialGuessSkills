@@ -125,7 +125,7 @@ test("冲突过滤 - 按严重级别", () => {
 
   const highSeverity = filterConflictsBySeverity(conflicts, "high");
   expect(highSeverity.length).toBe(1);
-  expect(highSeverity[0].severity).toBe("high");
+  expect(highSeverity[0]?.severity).toBe("high");
 
   const mediumAndAbove = filterConflictsBySeverity(conflicts, "medium");
   expect(mediumAndAbove.length).toBe(2);
