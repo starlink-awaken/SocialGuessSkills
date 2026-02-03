@@ -118,4 +118,18 @@ export interface AnalysisContext {
   previousOutputs?: Map<AgentType, AgentOutput>;
   iteration: number;
   conflicts: Conflict[];
+  agentType?: AgentType;
+}
+
+export interface AgentInstance {
+  name: string;
+  agentType: AgentType;
+  systemPrompt: string;
+  outputSchema: {
+    conclusion: string;
+    evidence: string[];
+    risks: string[];
+    suggestions: string[];
+    falsifiable: string;
+  };
 }
