@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { Hypothesis } from "./types.js";
+import type { Hypothesis, AgentType } from "./types.js";
 import { runWorkflow, queryAgent } from "./workflow/orchestrator.js";
 
 const mcpServer = new McpServer({
@@ -11,6 +11,11 @@ const mcpServer = new McpServer({
     tools: {}
   }
 });
+
+interface ReasoningArgs {
+  hypothesis: Hypothesis;
+  maxIterations?: number;
+}
 
 mcpServer.registerTool("reasoning", {
   description: "从基础假设推演完整的社会体系模型,通过7个专业Agent协同分析生成结构化输出",
@@ -49,7 +54,7 @@ mcpServer.registerTool("reasoning", {
     },
     required: ["hypothesis"]
   }
-}, async (args) => {
+} as any, (async (args: ReasoningArgs): Promise<any> => {
   const hypothesis: Hypothesis = args.hypothesis;
   const options = { maxIterations: args.maxIterations as number };
   
@@ -67,7 +72,12 @@ mcpServer.registerTool("reasoning", {
       }
     ]
   };
-});
+}) as unknown as any);
+
+interface QueryAgentArgs {
+  agentType: AgentType;
+  hypothesis: Hypothesis;
+}
 
 mcpServer.registerTool("query_agent", {
   description: "单独查询某个Agent的分析视角,获取其专业领域的深入分析",
@@ -101,13 +111,13 @@ mcpServer.registerTool("query_agent", {
     },
     required: ["agentType", "hypothesis"]
   }
-}, async (args) => {
+} as any, (async (args: QueryAgentArgs): Promise<any> => {
   const agentType = args.agentType;
   const hypothesis: Hypothesis = args.hypothesis;
   
   console.error(`[MCP] Querying ${agentType} agent`);
   
-  const output = await queryAgent(agentType as any, hypothesis);
+  const output = await queryAgent(agentType, hypothesis);
   
   console.error(`[MCP] Agent query completed`);
   
@@ -119,7 +129,11 @@ mcpServer.registerTool("query_agent", {
       }
     ]
   };
-});
+}) as unknown as any);
+
+interface ValidateModelArgs {
+  modelJson: string;
+}
 
 mcpServer.registerTool("validate_model", {
   description: "验证已有社会体系模型的一致性、完整性和逻辑合理性",
@@ -133,7 +147,7 @@ mcpServer.registerTool("validate_model", {
     },
     required: ["modelJson"]
   }
-}, async (args) => {
+} as any, (async (args: ValidateModelArgs): Promise<any> => {
   try {
     const model = JSON.parse(args.modelJson);
     
@@ -198,7 +212,7 @@ mcpServer.registerTool("validate_model", {
       isError: true
     };
   }
-});
+}) as unknown as any);
 
 async function main() {
   const transport = new StdioServerTransport();
