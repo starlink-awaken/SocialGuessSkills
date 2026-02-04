@@ -119,6 +119,50 @@ const validateModelConfig: any = {
   }
 });
 
+// Health check tool
+// empty args type is fine; keep as Record to avoid empty-interface lint
+type HealthArgs = Record<string, never>;
+
+const healthConfig: any = {
+  description: "健康检查: 返回服务运行状态,时间戳和版本(不暴露敏感信息)",
+  inputSchema: { type: "object", properties: {} }
+};
+
+(mcpServer as any).registerTool("health_check", healthConfig, async (_args: HealthArgs, _extra?: any): Promise<any> => {
+  try {
+    const timestamp = new Date().toISOString();
+    // 读取package.json中version字段
+    let version = "unknown";
+    try {
+      // 使用 require via dynamic import style for ESM-safe read
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const pkg = JSON.parse(await (await import('fs')).promises.readFile(new URL('../package.json', import.meta.url), 'utf-8'));
+      if (pkg && pkg.version) version = String(pkg.version);
+    } catch (e) {
+      // ignore, keep version as unknown
+    }
+
+    // Basic dependency checks (do not expose secrets)
+    const checks: any = { envLoaded: false, apiKeyConfigured: false };
+    // Check whether process.env has been populated (do not print values)
+    checks.envLoaded = Object.keys(process.env).length > 0;
+    // Detect presence of common API key variables without exposing their values
+    checks.apiKeyConfigured = !!(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || process.env.API_KEY);
+
+    const body = { status: "ok", timestamp, version } as any;
+    // Attach a minimal boolean summary of internal checks (no values)
+    body.systemChecks = {
+      envLoaded: checks.envLoaded,
+      apiKeyPresent: checks.apiKeyConfigured
+    };
+
+    return { content: [{ type: "text" as const, text: JSON.stringify(body) }] } as any;
+  } catch (error) {
+    const ts = new Date().toISOString();
+    return { content: [{ type: "text" as const, text: JSON.stringify({ status: "error", timestamp: ts, message: "health check failed" }) }], isError: true } as any;
+  }
+});
+
 async function main() {
   const transport = new StdioServerTransport();
   await mcpServer.server.connect(transport);
