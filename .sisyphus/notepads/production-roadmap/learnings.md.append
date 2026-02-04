@@ -1,0 +1,15 @@
+2026-02-04: 实现成本告警功能要点
+
+- 创建 src/utils/cost-alert.ts 提供 CostAlert 类与 defaultCostAlert 单例
+- 行为:
+  - 从环境变量 MONTHLY_BUDGET 读取预算, 范围限定为 $10 - $50, 默认 $20
+  - 50%（warn）和 100%（error）阈值
+  - addUsage(amount) 在达到 warn 时记录 WARN, 在达到 error 时记录 ERROR 并拒绝新请求
+  - 不执行任何扣费动作，仅告警并拒绝请求
+- 集成注意:
+  - Token 计数器应在每次消耗前调用 addUsage(估算美元) 来决定是否允许新请求
+  - 日志中避免泄露敏感环境变量值
+
+证据:
+- 已添加文件: src/utils/cost-alert.ts
+- TypeScript 诊断: 无诊断错误

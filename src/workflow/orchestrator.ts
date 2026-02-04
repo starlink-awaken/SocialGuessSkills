@@ -3,13 +3,13 @@ import type {
   SocialSystemModel, 
   WorkflowState, 
   AgentOutput, 
-  Conflict,
   SystemStructure,
   AgentType
 } from "../types";
 import { createAllAgents } from "../agents/agent-factory";
 import { executeAgent } from "../agents/agent-executor";
-import { detectConflicts, suggestResolution } from "./conflict-resolver";
+import { detectConflicts } from "./conflict-resolver";
+import { logger } from '../utils/logger.js';
 
 export async function runWorkflow(
   hypothesis: Hypothesis,
@@ -30,8 +30,7 @@ export async function runWorkflow(
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     state.iteration = iteration;
-
-    console.log(`\n=== 迭代 ${iteration}/${maxIterations} ===`);
+    logger.info({ iteration, maxIterations }, `=== 迭代 ${iteration}/${maxIterations} ===`);
 
     await step1_ValidateHypothesis(hypothesis, state);
     await step2_ExecuteAgents(agents, hypothesis, state);
@@ -50,9 +49,9 @@ export async function runWorkflow(
 
 async function step1_ValidateHypothesis(
   hypothesis: Hypothesis,
-  state: WorkflowState
+  _state: WorkflowState
 ): Promise<void> {
-  console.log("Step 1: 验证假设");
+  logger.info("Step 1: 验证假设");
 
   if (!hypothesis.assumptions || hypothesis.assumptions.length === 0) {
     throw new Error("假设必须包含assumptions数组");
@@ -62,7 +61,7 @@ async function step1_ValidateHypothesis(
     throw new Error("假设必须包含goals数组");
   }
 
-  console.log(`  ✓ 假设验证通过 (${hypothesis.assumptions.length}个假设, ${hypothesis.goals.length}个目标)`);
+  logger.info({ assumptions: hypothesis.assumptions.length, goals: hypothesis.goals.length }, `✓ 假设验证通过`);
 }
 
 async function step2_ExecuteAgents(
@@ -70,12 +69,21 @@ async function step2_ExecuteAgents(
   hypothesis: Hypothesis,
   state: WorkflowState
 ): Promise<void> {
-  console.log("Step 2: 并行执行Agent推演");
+  logger.info("Step 2: 并行执行Agent推演");
 
   const agentPromises: Promise<void>[] = [];
+  const totalAgents = agents.size;
+  let completedAgents = 0;
 
   for (const [agentType, agent] of agents) {
     if (!state.agentResults.has(agentType) || state.iteration > 1) {
+      // Send progress notification BEFORE starting this agent
+        try {
+          logger.info({ stage: "agent_execution", progress: completedAgents, total: totalAgents, agent: String(agentType) });
+        } catch (e) {
+          // ignore serialization/logging errors
+        }
+
       const promise = executeAgent(agent, {
         hypothesis,
         previousOutputs: state.agentResults,
@@ -84,9 +92,18 @@ async function step2_ExecuteAgents(
         agentType
       }).then(output => {
         state.agentResults.set(agentType, output);
-        console.log(`  ✓ ${agentType} Agent 完成`);
+        completedAgents += 1;
+
+        // Emit progress notification after completion
+          try {
+            logger.info({ stage: "agent_execution", progress: completedAgents, total: totalAgents, agent: String(agentType) });
+          } catch (e) {
+            // ignore
+          }
+
+          logger.info(`✓ ${agentType} Agent 完成`);
       }).catch(error => {
-        console.error(`  ✗ ${agentType} Agent 失败:`, error);
+        logger.error({ err: String(error), agent: String(agentType) }, `✗ ${agentType} Agent 失败`);
       });
 
       agentPromises.push(promise);
@@ -94,20 +111,20 @@ async function step2_ExecuteAgents(
   }
 
   await Promise.all(agentPromises);
-  console.log(`  → 完成Agent推演: ${state.agentResults.size}/7`);
+  logger.info({ completed: state.agentResults.size }, `→ 完成Agent推演`);
 }
 
 async function step3_AlignConflicts(state: WorkflowState): Promise<void> {
-  console.log("Step 3: 对齐冲突");
+  logger.info("Step 3: 对齐冲突");
 
   if (state.conflicts.length === 0) {
-    console.log("  ✓ 无冲突检测到");
+    logger.info("✓ 无冲突检测到");
     return;
   }
 
-  console.log(`  → 检测到 ${state.conflicts.length} 个冲突:`);
+  logger.info({ conflicts: state.conflicts.length }, `→ 检测到冲突`);
   state.conflicts.forEach((conflict, index) => {
-    console.log(`    ${index + 1}. [${conflict.type}] ${conflict.description} (${conflict.severity})`);
+    logger.info({ index: index + 1, type: conflict.type, severity: conflict.severity }, conflict.description);
   });
 
   state.history.push({
@@ -122,7 +139,7 @@ async function step4_SynthesizeModel(
   hypothesis: Hypothesis,
   state: WorkflowState
 ): Promise<SocialSystemModel> {
-  console.log("Step 4: 合成最终模型");
+  logger.info("Step 4: 合成最终模型");
 
   const structure = synthesizeStructure(Array.from(state.agentResults.values()));
 
@@ -138,33 +155,31 @@ async function step4_SynthesizeModel(
     }
   };
 
-  console.log("  ✓ 模型合成完成");
-  console.log(`  → 迭代次数: ${state.iteration}`);
-  console.log(`  → 冲突数量: ${state.conflicts.length}`);
-  console.log(`  → 置信度: ${model.metadata.confidence.toFixed(2)}`);
+  logger.info("✓ 模型合成完成");
+  logger.info({ iterations: state.iteration, conflicts: state.conflicts.length, confidence: model.metadata.confidence.toFixed(2) });
 
   return model;
 }
 
 async function step5_ValidateModel(
   model: SocialSystemModel,
-  state: WorkflowState
+  _state: WorkflowState
 ): Promise<void> {
-  console.log("Step 5: 验证模型");
+  logger.info("Step 5: 验证模型");
 
   const validationAgent = model.agentOutputs.find(o => o.agentType === "validation");
   
   if (validationAgent) {
-    console.log("  ✓ Validation Agent 输出已包含在模型中");
+    logger.info("✓ Validation Agent 输出已包含在模型中");
   } else {
-    console.log("  ⚠ 警告: Validation Agent 输出缺失");
+    logger.warn("⚠ 警告: Validation Agent 输出缺失");
   }
 
   if (model.agentOutputs.length < 7) {
-    console.log(`  ⚠ 警告: 缺少Agent输出 (${7 - model.agentOutputs.length}/7)`);
+    logger.warn({ missing: 7 - model.agentOutputs.length }, "⚠ 警告: 缺少Agent输出");
   }
 
-  console.log("  ✓ 模型验证完成");
+  logger.info("✓ 模型验证完成");
 }
 
 function synthesizeStructure(outputs: AgentOutput[]): SystemStructure {

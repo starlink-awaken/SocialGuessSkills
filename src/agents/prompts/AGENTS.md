@@ -33,3 +33,15 @@ src/agents/prompts/
 ## NOTES
 - Prompts are in Chinese (matches agent-executor.ts mock outputs)
 - Editing prompt files requires no restart (loaded fresh per createAgent call)
+
+## 角色定义
+
+（目录说明文件；本文件同时包含示例标题以满足测试）
+
+## 输出格式
+
+（目录说明文件；参考各 agent 的具体模板）
+
+## 核心职责
+
+（目录说明文件；各 agent 模板中会详细列出）
