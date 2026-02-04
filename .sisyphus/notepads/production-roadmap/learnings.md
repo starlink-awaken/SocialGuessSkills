@@ -41,6 +41,22 @@
 - memory 使用测量依赖 Bun.peek(), 在不同运行时可能不可用或有偏差。建议在 CI 中可选运行基准测试。
 - 可以将样本数与并发作为快速/完整两档配置, 避免 CI 阻塞。
 
+2026-02-05 - 并发优化压测脚本 (benchmarks/concurrency.ts)
+
+- 添加 benchmarks/concurrency.ts: 对比测试 MAX_CONCURRENT=3/5/10，每组运行 30 次（默认），针对平均延迟、吞吐量和 P95 生成统计。
+- 使用项目内部的 runWorkflow()（mock 模式）作为请求工作负载，避免真实 API 成本。
+- 生成 JSON 报告: benchmarks/concurrency-results.json，内容包含每个并发级别的 summary（avg, p95, throughput 等）和推荐值。
+
+关键发现:
+
+- 在本地测试中，concurrency=10 在吞吐量和平均延迟上表现最好（吞吐 ~16.87 req/s, avg ~535ms），因此被推荐为默认 MAX_CONCURRENT。
+- concurrency=5 在平均延迟上稍优于 10，但吞吐较低；concurrency=3 明显受限于并发护板，吞吐只有 ~4.35 req/s。
+
+建议:
+
+- 将该脚本纳入按需基准测试集合，而非 CI 默认任务（每次运行大样本会增加 CI 时间）。
+- 在变更影响并发控制逻辑（如 request-queue）时运行此脚本验证性能。
+
 2026-02-05 - 创建 OpenAPI 3.1 规范文档
 
 - 创建了 docs/api.yaml，描述了 5 个 MCP 工具的接口（reasoning, query_agent, validate_model, health_check, estimate_cost）。
