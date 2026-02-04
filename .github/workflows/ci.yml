@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: TypeScript + Tests (Bun)
+    runs-on: ubuntu-latest
+    env:
+      # Placeholder for external API keys used by integrations. Use repository secrets.
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (bun)
+        run: |
+          bun install
+
+      - name: Type check (tsc)
+        run: |
+          # Use bunx to run TypeScript compiler without emitting artifacts
+          bunx tsc --noEmit
+
+      - name: Run tests
+        run: |
+          # Ensure tests do not require real external API keys in CI - use mocks
+          bun test
+
+      - name: Build validation (optional)
+        if: always()
+        run: |
+          # If project has a build step, run it here. Keep light to avoid long CI.
+          if [ -f package.json ] && grep -q "build" package.json; then
+            bun run build || echo "Build step failed or not defined; continuing"
+          else
+            echo "No build script defined"
+          fi
