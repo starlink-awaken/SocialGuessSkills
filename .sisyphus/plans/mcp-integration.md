@@ -113,7 +113,7 @@ MCP Server提供的工具：
 
 ## TODOs
 
-- [ ] 1. 研究OpenCode CLI的MCP配置格式
+- [x] 1. 研究OpenCode CLI的MCP配置格式
 
   **What to do**:
   - 查找OpenCode CLI的官方文档或配置示例
@@ -191,7 +191,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 2. 创建OpenCode CLI的MCP配置
+- [x] 2. 创建OpenCode CLI的MCP配置
 
   **What to do**:
   - 基于Task 1的研究结果，创建正确的配置文件
@@ -349,7 +349,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 4. 研究Claude Desktop的MCP配置格式
+- [x] 4. 研究Claude Desktop的MCP配置格式
 
   **What to do**:
   - 查找Claude Desktop的MCP集成文档
@@ -405,7 +405,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 5. 创建Claude Desktop的MCP配置
+- [x] 5. 创建Claude Desktop的MCP配置
 
   **What to do**:
   - 基于Task 4的研究，创建配置
@@ -534,7 +534,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 7. 创建集成文档
+- [x] 7. 创建集成文档
 
   **What to do**:
   - 创建`docs/MCP_INTEGRATION.md`文档
@@ -645,7 +645,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 8. 创建使用示例文档
+- [x] 8. 创建使用示例文档
 
   **What to do**:
   - 创建`examples/mcp-usage-examples.md`
@@ -936,7 +936,7 @@ MCP Server提供的工具：
 
 ---
 
-- [ ] 12. 更新主README
+- [x] 12. 更新主README
 
   **What to do**:
   - 在主`README.md`中添加"MCP Integration"章节
