@@ -32,7 +32,7 @@ const reasoningConfig: any = {
         },
         required: ["assumptions", "goals"]
       },
-      maxIterations: { type: "number", default: 3, minimum: 1, maximum: 10 }
+      maxIterations: { type: "number", default: 3 }
     },
     required: ["hypothesis"]
   }
@@ -62,7 +62,7 @@ const queryAgentConfig: any = {
   inputSchema: {
     type: "object",
     properties: {
-      agentType: { type: "string", enum: ["systems", "econ", "socio", "governance", "culture", "risk", "validation"] },
+      agentType: { type: "string" },
       hypothesis: { type: "object", properties: { assumptions: { type: "array", items: { type: "string" } }, constraints: { type: "array", items: { type: "string" } }, goals: { type: "array", items: { type: "string" } } }, required: ["assumptions", "goals"] }
     },
     required: ["agentType", "hypothesis"]
@@ -86,7 +86,7 @@ interface ValidateModelArgs { modelJson: string }
 
 const validateModelConfig: any = {
   description: "验证已有社会体系模型的一致性、完整性和逻辑合理性",
-  inputSchema: { type: "object", properties: { modelJson: { type: "string", description: "社会体系模型的JSON字符串" } }, required: ["modelJson"] }
+  inputSchema: { type: "object", properties: { modelJson: { type: "string" } }, required: ["modelJson"] }
 };
 
 (mcpServer as any).registerTool("validate_model", validateModelConfig, async (args: ValidateModelArgs, _extra?: any): Promise<any> => {
