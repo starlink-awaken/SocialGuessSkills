@@ -1,0 +1,48 @@
+{
+  "uid": "social-modeling-mcp",
+  "title": "Social Modeling MCP - Basic Metrics",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Requests Total",
+      "targets": [
+        { "expr": "mcp_requests_total", "legendFormat": "{{tool}}" }
+      ],
+      "id": 1
+    },
+    {
+      "type": "graph",
+      "title": "Request Duration (histogram sum)",
+      "targets": [
+        { "expr": "mcp_request_duration_seconds_sum", "legendFormat": "sum" }
+      ],
+      "id": 2
+    },
+    {
+      "type": "graph",
+      "title": "Tokens (input/output)",
+      "targets": [
+        { "expr": "mcp_tokens_total{type=\"input\"}", "legendFormat": "input" },
+        { "expr": "mcp_tokens_total{type=\"output\"}", "legendFormat": "output" }
+      ],
+      "id": 3
+    },
+    {
+      "type": "graph",
+      "title": "Estimated Cost (USD)",
+      "targets": [
+        { "expr": "mcp_cost_usd_total", "legendFormat": "usd" }
+      ],
+      "id": 4
+    },
+    {
+      "type": "graph",
+      "title": "Errors Total",
+      "targets": [
+        { "expr": "mcp_errors_total", "legendFormat": "errors" }
+      ],
+      "id": 5
+    }
+  ],
+  "schemaVersion": 36
+}

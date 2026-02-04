@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'social_modeling_mcp'
+    static_configs:
+      - targets: ['localhost:3000']
+        labels:
+          service: social-modeling-mcp
+
+# 示例: 将 /metrics 暴露的指标抓取并在 Grafana 中展示

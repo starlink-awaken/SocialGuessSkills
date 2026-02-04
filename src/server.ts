@@ -2,6 +2,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { Hypothesis, AgentType } from "./types.js";
 import { runWorkflow, queryAgent } from "./workflow/orchestrator.js";
+import { globalTokenCounter } from "./utils/token-counter.js";
+import { childLogger } from "./utils/logger.js";
+import { createServer as createNodeServer } from "http";
 
 const mcpServer = new McpServer({
   name: "social-modeling-server",
@@ -167,6 +170,86 @@ async function main() {
   const transport = new StdioServerTransport();
   await mcpServer.server.connect(transport);
   console.error("[MCP] Social Modeling MCP Server running on stdio");
+  // Start a lightweight HTTP server to expose /metrics (Prometheus text format)
+  const logger = childLogger();
+  const httpServer = createNodeServer((req, res) => {
+    if (!req.url) return res.end();
+    if (req.url === "/metrics") {
+      res.setHeader("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+
+      // Build Prometheus text exposition
+      const lines: string[] = [];
+      lines.push("# HELP mcp_requests_total Total number of MCP requests processed");
+      lines.push("# TYPE mcp_requests_total counter");
+      // Example: probe registered tools counts if available via mcpServer (best-effort)
+      try {
+        const toolNames = Object.keys((mcpServer as any).tools ?? {});
+        if (toolNames.length === 0) {
+          // fallback: known tools
+          toolNames.push("reasoning", "query_agent", "validate_model", "health_check");
+        }
+        for (const t of toolNames) {
+          // For now export 0 as we don't track per-tool counts centrally
+          lines.push(`mcp_requests_total{tool="${t}"} 0`);
+        }
+      } catch (e) {
+        lines.push(`mcp_requests_total{tool="unknown"} 0`);
+      }
+
+      // Request duration histogram (buckets example)
+      lines.push("# HELP mcp_request_duration_seconds Request duration in seconds");
+      lines.push("# TYPE mcp_request_duration_seconds histogram");
+      // Provide placeholder buckets for overall requests
+      const buckets = [0.1, 0.5, 1, 2.5, 5, 10];
+      for (const b of buckets) {
+        lines.push(`mcp_request_duration_seconds_bucket{le="${b}"} 0`);
+      }
+      lines.push("mcp_request_duration_seconds_bucket{le=\"+Inf\"} 0");
+      lines.push("mcp_request_duration_seconds_sum 0");
+      lines.push("mcp_request_duration_seconds_count 0");
+
+      // Token consumption and costs (use token-counter monthly totals)
+      try {
+        const usage = globalTokenCounter.getMonthlyUsage();
+        lines.push("# HELP mcp_tokens_total Total tokens consumed (monthly window)");
+        lines.push("# TYPE mcp_tokens_total counter");
+        lines.push(`mcp_tokens_total{type="input"} ${usage.input}`);
+        lines.push(`mcp_tokens_total{type="output"} ${usage.output}`);
+
+        lines.push("# HELP mcp_cost_usd_total Cumulative estimated cost in USD (monthly window)");
+        lines.push("# TYPE mcp_cost_usd_total gauge");
+        lines.push(`mcp_cost_usd_total ${usage.costUsd}`);
+      } catch (e) {
+        lines.push("mcp_tokens_total{type=\"input\"} 0");
+        lines.push("mcp_tokens_total{type=\"output\"} 0");
+        lines.push("mcp_cost_usd_total 0");
+      }
+
+      // Errors
+      lines.push("# HELP mcp_errors_total Total number of MCP errors");
+      lines.push("# TYPE mcp_errors_total counter");
+      lines.push("mcp_errors_total 0");
+
+      const body = lines.join("\n") + "\n";
+      res.writeHead(200);
+      res.end(body);
+      return;
+    }
+
+    // Basic root path for quick check
+    if (req.url === "/") {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.writeHead(200);
+      res.end(JSON.stringify({ status: "ok", server: "social-modeling-mcp", metrics: "/metrics" }));
+      return;
+    }
+
+    res.writeHead(404);
+    res.end();
+  });
+
+  const port = Number(process.env.PORT || 3000);
+  httpServer.listen(port, () => logger.info({ msg: `HTTP metrics server listening on ${port}`, port }));
 }
 
 main().catch((error) => {
