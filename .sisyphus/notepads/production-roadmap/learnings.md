@@ -40,3 +40,16 @@
 - 当前 token 计数在模拟模式下为0。若未来启用真实 LLM 调用, token-counter 会记录消耗。
 - memory 使用测量依赖 Bun.peek(), 在不同运行时可能不可用或有偏差。建议在 CI 中可选运行基准测试。
 - 可以将样本数与并发作为快速/完整两档配置, 避免 CI 阻塞。
+
+2026-02-05 - 创建 OpenAPI 3.1 规范文档
+
+- 创建了 docs/api.yaml，描述了 5 个 MCP 工具的接口（reasoning, query_agent, validate_model, health_check, estimate_cost）。
+- 使用 OpenAPI 3.1.0 规范，包含路径、参数、响应格式及详细的 Schema 定义。
+- 将 src/types.ts 中的 TypeScript 接口映射为 OpenAPI 组件。
+- 包含了错误响应（400, 500）和示例数据。
+- 验证了文档的完整性和正确性。
+
+关键学习点:
+- OpenAPI 3.1.0 与 JSON Schema 的兼容性更好，可以直接定义复杂的嵌套对象。
+- MCP 工具虽然基于 JSON-RPC，但使用 OpenAPI 描述其功能路径（如 /tools/reasoning）有助于文档化和第三方集成。
+- 在文档中包含中文描述可以提高对中文开发者的友好度。

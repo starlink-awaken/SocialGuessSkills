@@ -1,0 +1,383 @@
+openapi: 3.1.0
+info:
+  title: SocialGuessSkills MCP API
+  version: 1.0.0
+  description: Multi-agent social system modeling framework MCP tools API specification.
+
+servers:
+  - url: http://localhost:3000
+    description: Local MCP Server (Representational)
+
+paths:
+  /tools/reasoning:
+    post:
+      summary: Full multi-agent social system reasoning
+      description: 推演完整的社会体系模型，通过7个专业Agent协同分析生成结构化输出。
+      operationId: reasoning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hypothesis:
+                  $ref: '#/components/schemas/Hypothesis'
+                maxIterations:
+                  type: integer
+                  default: 3
+                  description: 最大迭代次数
+              required:
+                - hypothesis
+      responses:
+        '200':
+          description: Successful reasoning result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialSystemModel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /tools/query_agent:
+    post:
+      summary: Query a specific agent perspective
+      description: 单独查询某个Agent的分析视角，获取其专业领域的深入分析。
+      operationId: queryAgent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentType:
+                  $ref: '#/components/schemas/AgentType'
+                hypothesis:
+                  $ref: '#/components/schemas/Hypothesis'
+              required:
+                - agentType
+                - hypothesis
+      responses:
+        '200':
+          description: Agent analysis output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tools/validate_model:
+    post:
+      summary: Validate a social system model
+      description: 验证已有社会体系模型的一致性、完整性和逻辑合理性。
+      operationId: validateModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modelJson:
+                  type: string
+                  description: 模型的JSON字符串
+              required:
+                - modelJson
+      responses:
+        '200':
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tools/health_check:
+    post:
+      summary: Service health check
+      description: 返回服务运行状态、时间戳和版本信息。
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /tools/estimate_cost:
+    post:
+      summary: Estimate reasoning cost
+      description: 预估执行推演任务所需的Token数量和成本。
+      operationId: estimateCost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hypothesis:
+                  $ref: '#/components/schemas/Hypothesis'
+                maxIterations:
+                  type: integer
+                  default: 3
+              required:
+                - hypothesis
+      responses:
+        '200':
+          description: Cost estimate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostEstimate'
+
+components:
+  schemas:
+    Hypothesis:
+      type: object
+      description: 基础假设定义
+      properties:
+        assumptions:
+          type: array
+          items:
+            type: string
+          example: ["1000人社区,资源有限", "协作可提升总产出30%"]
+        constraints:
+          type: array
+          items:
+            type: string
+          example: ["信息不完全:个体只知道邻近50人的状态"]
+        goals:
+          type: array
+          items:
+            type: string
+          example: ["保证所有人基本生存", "冲突解决机制可执行"]
+      required:
+        - assumptions
+        - goals
+
+    AgentType:
+      type: string
+      enum: [systems, econ, socio, governance, culture, risk, validation]
+      description: 专业Agent类型
+
+    AgentOutput:
+      type: object
+      properties:
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        conclusion:
+          type: string
+          description: 分析结论
+        evidence:
+          type: array
+          items:
+            type: string
+          description: 支撑证据
+        risks:
+          type: array
+          items:
+            type: string
+          description: 识别的风险
+        suggestions:
+          type: array
+          items:
+            type: string
+          description: 策略建议
+        falsifiable:
+          type: string
+          description: 可证伪点
+
+    Conflict:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [logical, priority, risk_amplification]
+        involvedAgents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentType'
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+        resolutionStrategy:
+          type: string
+
+    SystemStructure:
+      type: object
+      description: 9层结构化模型
+      properties:
+        overall:
+          type: object
+          properties:
+            resourceLayer: { type: array, items: { type: string } }
+            behaviorLayer: { type: array, items: { type: string } }
+            organizationLayer: { type: array, items: { type: string } }
+            institutionalLayer: { type: array, items: { type: string } }
+            governanceLayer: { type: array, items: { type: string } }
+            culturalLayer: { type: array, items: { type: string } }
+        workflow:
+          type: object
+          properties:
+            demandGeneration: { type: array, items: { type: string } }
+            resourceAllocation: { type: array, items: { type: string } }
+            production: { type: array, items: { type: string } }
+            ruleEnforcement: { type: array, items: { type: string } }
+            publicGoods: { type: array, items: { type: string } }
+            feedback: { type: array, items: { type: string } }
+        institutions:
+          type: object
+          properties:
+            propertyRights: { type: array, items: { type: string } }
+            contracts: { type: array, items: { type: string } }
+            publicGoods: { type: array, items: { type: string } }
+            disputeResolution: { type: array, items: { type: string } }
+            riskSharing: { type: array, items: { type: string } }
+        governance:
+          type: object
+          properties:
+            layeredGovernance: { type: array, items: { type: string } }
+            accountability: { type: array, items: { type: string } }
+            transparency: { type: array, items: { type: string } }
+            crisis: { type: array, items: { type: string } }
+        culture:
+          type: object
+          properties:
+            narrative: { type: array, items: { type: string } }
+            rituals: { type: array, items: { type: string } }
+            values: { type: array, items: { type: string } }
+            education: { type: array, items: { type: string } }
+        innovation:
+          type: object
+          properties:
+            experimentation: { type: array, items: { type: string } }
+            balance: { type: array, items: { type: string } }
+            adaptability: { type: array, items: { type: string } }
+        risks:
+          type: object
+          properties:
+            scarcity: { type: array, items: { type: string } }
+            trust: { type: array, items: { type: string } }
+            power: { type: array, items: { type: string } }
+            culture: { type: array, items: { type: string } }
+        metrics:
+          type: object
+          properties:
+            stability: { type: array, items: { type: string } }
+            fairness: { type: array, items: { type: string } }
+            efficiency: { type: array, items: { type: string } }
+            cooperation: { type: array, items: { type: string } }
+            resilience: { type: array, items: { type: string } }
+            legitimacy: { type: array, items: { type: string } }
+        optimization:
+          type: object
+          properties:
+            indicators: { type: array, items: { type: string } }
+            mechanisms: { type: array, items: { type: string } }
+            decisionLoop: { type: array, items: { type: string } }
+
+    SocialSystemModel:
+      type: object
+      properties:
+        hypothesis:
+          $ref: '#/components/schemas/Hypothesis'
+        agentOutputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentOutput'
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conflict'
+        structure:
+          $ref: '#/components/schemas/SystemStructure'
+        metadata:
+          type: object
+          properties:
+            iterations:
+              type: integer
+            confidence:
+              type: number
+            generatedAt:
+              type: string
+              format: date-time
+
+    ValidationResult:
+      type: object
+      properties:
+        isValid:
+          type: boolean
+        checks:
+          type: object
+          properties:
+            hasAllAgents: { type: boolean }
+            hasStructure: { type: boolean }
+            hasHypothesis: { type: boolean }
+            hasMetadata: { type: boolean }
+            agentTypesAreValid: { type: boolean }
+        issues:
+          type: array
+          items: { type: string }
+        warnings:
+          type: array
+          items: { type: string }
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: "1.0.0"
+        systemChecks:
+          type: object
+          properties:
+            envLoaded: { type: boolean }
+            apiKeyPresent: { type: boolean }
+
+    CostEstimate:
+      type: object
+      properties:
+        estimatedTokens:
+          type: integer
+          description: 预估消耗的总Token数
+        estimatedCostUsd:
+          type: number
+          description: 预估消耗的美元成本
+        currency:
+          type: string
+          default: "USD"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              details: { type: string }
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              message: { type: string }
