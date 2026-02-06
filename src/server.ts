@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import type { Hypothesis, AgentType } from "./types.js";
 import { runWorkflow, queryAgent } from "./workflow/orchestrator.js";
 import { globalTokenCounter } from "./utils/token-counter.js";
-import { childLogger } from "./utils/logger.js";
+import { childLogger, logger } from "./utils/logger.js";
 import { createServer as createNodeServer } from "http";
 
 const mcpServer = new McpServer({
@@ -45,11 +45,11 @@ const reasoningConfig: any = {
   const hypothesis: Hypothesis = args.hypothesis;
   const options = { maxIterations: args.maxIterations as number };
 
-  console.error(`[MCP] Starting reasoning with ${hypothesis.assumptions.length} assumptions`);
+  logger.info(`[MCP] Starting reasoning with ${hypothesis.assumptions.length} assumptions`);
 
   const model = await runWorkflow(hypothesis, options);
 
-  console.error(`[MCP] Reasoning completed: ${model.agentOutputs.length} agents, ${model.conflicts.length} conflicts`);
+  logger.info(`[MCP] Reasoning completed: ${model.agentOutputs.length} agents, ${model.conflicts.length} conflicts`);
 
   const response = { content: [{ type: "text" as const, text: JSON.stringify(model, null, 2) }] };
   return response as any;
@@ -76,11 +76,11 @@ const queryAgentConfig: any = {
   const agentType = args.agentType;
   const hypothesis: Hypothesis = args.hypothesis;
 
-  console.error(`[MCP] Querying ${agentType} agent`);
+  logger.info(`[MCP] Querying ${agentType} agent`);
 
   const output = await queryAgent(agentType, hypothesis);
 
-  console.error(`[MCP] Agent query completed`);
+  logger.info(`[MCP] Agent query completed`);
 
   return { content: [{ type: "text" as const, text: JSON.stringify(output, null, 2) }] } as any;
 });
@@ -169,9 +169,8 @@ const healthConfig: any = {
 async function main() {
   const transport = new StdioServerTransport();
   await mcpServer.server.connect(transport);
-  console.error("[MCP] Social Modeling MCP Server running on stdio");
+  logger.info("[MCP] Social Modeling MCP Server running on stdio");
   // Start a lightweight HTTP server to expose /metrics (Prometheus text format)
-  const logger = childLogger();
   const httpServer = createNodeServer((req, res) => {
     if (!req.url) return res.end();
     if (req.url === "/metrics") {
@@ -252,7 +251,7 @@ async function main() {
   httpServer.listen(port, () => logger.info({ msg: `HTTP metrics server listening on ${port}`, port }));
 }
 
-main().catch((error) => {
-  console.error("[MCP] Fatal error:", error);
-  process.exit(1);
-});
+  main().catch((error) => {
+    logger.error("[MCP] Fatal error:", error);
+    process.exit(1);
+  });

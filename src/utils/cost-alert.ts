@@ -9,6 +9,7 @@
 type AlertLevel = 'ok' | 'warn' | 'error';
 
 import { config } from './config.js';
+import { logger } from './logger.js';
 
 const DEFAULT_BUDGET = config.MONTHLY_BUDGET;
 
@@ -46,7 +47,7 @@ export class CostAlert {
   // 如果增加后达到/超过 warn 或 error，将输出日志
   addUsage(amount: number): { allowed: boolean; state: ReturnType<CostAlert['getState']> } {
     if (amount <= 0) {
-      console.warn('[cost-alert] addUsage called with non-positive amount', amount);
+      logger.warn('[cost-alert] addUsage called with non-positive amount', amount);
       return { allowed: true, state: this.getState() };
     }
 
@@ -55,7 +56,7 @@ export class CostAlert {
 
     // 先判断是否会超预算（如果当前已处于 error，则拒绝所有新请求）
     if (prevUsed >= this.errorThreshold) {
-      console.error('[cost-alert] 月度预算已超出，拒绝新请求', { monthlyBudget: this.monthlyBudget, used: this.used });
+      logger.error('[cost-alert] 月度预算已超出，拒绝新请求', { monthlyBudget: this.monthlyBudget, used: this.used });
       return { allowed: false, state: this.getState() };
     }
 
@@ -63,7 +64,7 @@ export class CostAlert {
     if (newUsed >= this.errorThreshold) {
       this.used = newUsed;
       const s = this.getState();
-      console.error('[cost-alert] 达到或超过预算限额（拒绝）。', s);
+      logger.error('[cost-alert] 达到或超过预算限额（拒绝）。', s);
       return { allowed: false, state: s };
     }
 
@@ -71,7 +72,7 @@ export class CostAlert {
     if (newUsed >= this.warnThreshold && prevUsed < this.warnThreshold) {
       this.used = newUsed;
       const s = this.getState();
-      console.warn('[cost-alert] 达到预算 50% 警告阈值。', s);
+      logger.warn('[cost-alert] 达到预算 50% 警告阈值。', s);
       return { allowed: true, state: s };
     }
 
