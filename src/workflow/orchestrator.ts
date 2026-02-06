@@ -11,6 +11,20 @@ import { executeAgent } from "../agents/agent-executor";
 import { detectConflicts } from "./conflict-resolver";
 import { logger } from '../utils/logger.js';
 
+// Agent cache for memoization across iterations
+interface AgentCacheEntry {
+  agentType: AgentType;
+  hypothesisHash: string;
+  result: AgentOutput;
+  timestamp: number;
+}
+
+const agentCache = new Map<string, AgentCacheEntry>();
+
+function getCacheKey(agentType: AgentType, hypothesis: Hypothesis): string {
+  return `${agentType}:${JSON.stringify(hypothesis)}`;
+}
+
 export async function runWorkflow(
   hypothesis: Hypothesis,
   options?: { maxIterations?: number }
@@ -36,7 +50,15 @@ export async function runWorkflow(
     await step2_ExecuteAgents(agents, hypothesis, state);
     state.conflicts = detectConflicts(Array.from(state.agentResults.values()));
     await step3_AlignConflicts(state);
-    
+
+    // Add convergence check: stop early if no conflicts detected
+    if (state.conflicts.length === 0) {
+      logger.info(`✓ Workflow converged in ${iteration + 1} iterations (no conflicts)`);
+      const model = await step4_SynthesizeModel(hypothesis, state);
+      await step5_ValidateModel(model, state);
+      return model;
+    }
+
     if (iteration === maxIterations) {
       const model = await step4_SynthesizeModel(hypothesis, state);
       await step5_ValidateModel(model, state);
@@ -77,12 +99,16 @@ async function step2_ExecuteAgents(
 
   for (const [agentType, agent] of agents) {
     if (!state.agentResults.has(agentType) || state.iteration > 1) {
-      // Send progress notification BEFORE starting this agent
-        try {
-          logger.info({ stage: "agent_execution", progress: completedAgents, total: totalAgents, agent: String(agentType) });
-        } catch (e) {
-          // ignore serialization/logging errors
-        }
+      const cacheKey = getCacheKey(agentType, hypothesis);
+      const cached = agentCache.get(cacheKey);
+
+      if (cached && state.iteration > 1) {
+        logger.info(`Using cached result for ${agentType} Agent (iteration ${state.iteration})`);
+        state.agentResults.set(agentType, cached.result);
+        completedAgents += 1;
+        agentPromises.push(Promise.resolve());
+        continue;
+      }
 
       const promise = executeAgent(agent, {
         hypothesis,
@@ -94,14 +120,13 @@ async function step2_ExecuteAgents(
         state.agentResults.set(agentType, output);
         completedAgents += 1;
 
-        // Emit progress notification after completion
-          try {
-            logger.info({ stage: "agent_execution", progress: completedAgents, total: totalAgents, agent: String(agentType) });
-          } catch (e) {
-            // ignore
-          }
-
-          logger.info(`✓ ${agentType} Agent 完成`);
+        logger.info(`✓ ${agentType} Agent 完成`);
+        agentCache.set(cacheKey, {
+          agentType,
+          hypothesisHash: JSON.stringify(hypothesis),
+          result: output,
+          timestamp: Date.now()
+        });
       }).catch(error => {
         logger.error({ err: String(error), agent: String(agentType) }, `✗ ${agentType} Agent 失败`);
       });

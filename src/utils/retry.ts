@@ -14,12 +14,12 @@ function defaultShouldRetry(err: unknown): boolean {
   if (!err) return false;
   // Network errors (no response) -> retry
   // Many libraries throw error objects without status when network fails
-  if (typeof err === 'object' && !('status' in (err as any)) && !('statusCode' in (err as any))) {
+  if (typeof err === 'object' && !('status' in err) && !('statusCode' in err)) {
     return true;
   }
 
   if (isErrorWithStatus(err)) {
-    const status = Number((err as any).status ?? (err as any).statusCode ?? 0);
+    const status = Number(err.status ?? err.statusCode ?? 0);
     // Do not retry auth errors
     if (status === 401 || status === 403) return false;
     // 429 Too Many Requests: don't retry unless Retry-After header present

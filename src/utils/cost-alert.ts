@@ -23,10 +23,7 @@ export class CostAlert {
   private errorThreshold: number; // 100%阈值
 
   constructor(monthlyBudget?: number) {
-    this.monthlyBudget = monthlyBudget ?? readBudgetFromEnv();
-    // clamp allowed budget range $10 - $50 per spec
-    if (this.monthlyBudget < 10) this.monthlyBudget = 10;
-    if (this.monthlyBudget > 50) this.monthlyBudget = 50;
+    this.monthlyBudget = clampBudget(monthlyBudget ?? readBudgetFromEnv());
     this.used = 0;
     this.warnThreshold = this.monthlyBudget / 2; // 50%
     this.errorThreshold = this.monthlyBudget; // 100%
@@ -66,7 +63,7 @@ export class CostAlert {
     if (newUsed >= this.errorThreshold) {
       this.used = newUsed;
       const s = this.getState();
-      console.error('[cost-alert] 达到或超过预算限额（拒绝）。', sanitizeForLog(s));
+      console.error('[cost-alert] 达到或超过预算限额（拒绝）。', s);
       return { allowed: false, state: s };
     }
 
@@ -74,7 +71,7 @@ export class CostAlert {
     if (newUsed >= this.warnThreshold && prevUsed < this.warnThreshold) {
       this.used = newUsed;
       const s = this.getState();
-      console.warn('[cost-alert] 达到预算 50% 警告阈值。', sanitizeForLog(s));
+      console.warn('[cost-alert] 达到预算 50% 警告阈值。', s);
       return { allowed: true, state: s };
     }
 
@@ -86,9 +83,7 @@ export class CostAlert {
   // 重置当月使用（仅测试/维护用途）
   reset(monthlyBudget?: number) {
     if (monthlyBudget !== undefined) {
-      this.monthlyBudget = monthlyBudget;
-      if (this.monthlyBudget < 10) this.monthlyBudget = 10;
-      if (this.monthlyBudget > 50) this.monthlyBudget = 50;
+      this.monthlyBudget = clampBudget(monthlyBudget);
       this.warnThreshold = this.monthlyBudget / 2;
       this.errorThreshold = this.monthlyBudget;
     }
@@ -96,15 +91,11 @@ export class CostAlert {
   }
 }
 
-// Helper: 移除/屏蔽可能敏感字段（当前没有敏感字段，但保留位置以防未来扩展）
-function sanitizeForLog(state: any) {
-  return {
-    monthlyBudget: state.monthlyBudget,
-    used: state.used,
-    remaining: state.remaining,
-    level: state.level,
-  };
-}
+  // Helper: 提取clampBudget()方法以消除重复代码
+  export function clampBudget(budget: number): number {
+    // Clamp budget to allowed range (10-50 per spec)
+    return Math.max(10, Math.min(50, budget));
+  }
 
 // 默认导出单例，方便直接在项目中使用
 export const defaultCostAlert = new CostAlert();

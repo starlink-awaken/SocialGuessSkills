@@ -6,6 +6,9 @@ export function detectConflicts(outputs: AgentOutput[]): Conflict[] {
   conflicts.push(...detectLogicalConflicts(outputs));
   conflicts.push(...detectPriorityConflicts(outputs));
   conflicts.push(...detectRiskAmplification(outputs));
+  conflicts.push(...detectGoalConflicts(outputs));
+  conflicts.push(...detectConstraintConflicts(outputs));
+  conflicts.push(...detectEvidenceConflicts(outputs));
 
   return conflicts;
 }
@@ -175,6 +178,160 @@ function detectRiskAmplification(outputs: AgentOutput[]): Conflict[] {
   return conflicts;
 }
 
+function detectGoalConflicts(outputs: AgentOutput[]): Conflict[] {
+  const conflicts: Conflict[] = [];
+  const goalKeywords = {
+    systems: ["效率", "优化", "改进"],
+    econ: ["利润", "最大化", "增长"],
+    socio: ["公平", "平等", "分配"],
+    governance: ["控制", "监管", "稳定"],
+    culture: ["传统", "保护", "延续"],
+    risk: ["稳健", "安全", "防护"],
+    validation: ["验证", "测试", "评估"]
+  };
+
+  for (let i = 0; i < outputs.length; i++) {
+    for (let j = i + 1; j < outputs.length; j++) {
+      const agentA = outputs[i];
+      const agentB = outputs[j];
+
+      if (!agentA || !agentB) continue;
+
+      // Check if one agent prioritizes efficiency while another prioritizes stability
+      const agentAType = agentA.agentType as keyof typeof goalKeywords;
+      const agentBType = agentB.agentType as keyof typeof goalKeywords;
+      const keywordsA = goalKeywords[agentAType] || [];
+      const keywordsB = goalKeywords[agentBType] || [];
+
+      // Check for conflicting goals (efficiency vs stability, profit vs equality, etc.)
+      const conflictPairs: [string[], string[]][] = [
+        [["效率", "增长"], ["公平", "平等", "稳定"]], // econ vs socio/governance
+        [["控制", "监管"], ["自由", "创新"]], // governance vs systems
+        [["传统", "保护"], ["效率", "优化"]], // culture vs systems
+        [["稳健", "安全"], ["最大化", "增长"]] // risk vs econ
+      ];
+
+      for (const [goalsA, goalsB] of conflictPairs) {
+        const agentAHasGoals = keywordsA.some(k => goalsA.includes(k));
+        const agentBHasGoals = keywordsB.some(k => goalsB.includes(k));
+
+        if (agentAHasGoals && agentBHasGoals) {
+          conflicts.push({
+            type: "goal",
+            involvedAgents: [agentA.agentType, agentB.agentType],
+            description: `${agentA.agentType}的目标(${keywordsA.join("/")})与${agentB.agentType}的目标(${keywordsB.join("/")})存在潜在冲突`,
+            severity: "medium",
+            resolutionStrategy: "需明确优先级顺序,建立目标权衡机制,寻求多目标共赢方案"
+          });
+          break; // Avoid duplicate conflicts
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+function detectConstraintConflicts(outputs: AgentOutput[]): Conflict[] {
+  const conflicts: Conflict[] = [];
+  const constraintKeywords = {
+    systems: ["必须", "应当", "强制"],
+    econ: ["成本", "预算", "资源限制"],
+    socio: ["参与", "共识", "民主"],
+    governance: ["法规", "合规", "审批"],
+    culture: ["习俗", "禁忌", "规范"],
+    risk: ["风险阈值", "安全标准", "底线"],
+    validation: ["测试条件", "验证标准", "证据要求"]
+  };
+
+  for (let i = 0; i < outputs.length; i++) {
+    for (let j = i + 1; j < outputs.length; j++) {
+      const agentA = outputs[i];
+      const agentB = outputs[j];
+
+      if (!agentA || !agentB) continue;
+
+      const agentAType = agentA.agentType as keyof typeof constraintKeywords;
+      const agentBType = agentB.agentType as keyof typeof constraintKeywords;
+      const keywordsA = constraintKeywords[agentAType] || [];
+      const keywordsB = constraintKeywords[agentBType] || [];
+
+      // Check for incompatible constraints
+      const incompatiblePairs: [string[], string[]][] = [
+        [["强制", "必须"], ["应当", "建议", "自主"]], // strict vs flexible
+        [["成本限制"], ["高投入", "资源充足"]], // econ vs systems (resource mismatch)
+        [["法规", "合规"], ["灵活", "创新"]], // governance vs culture
+        [["风险阈值"], ["激进", "最大化"]], // risk vs econ
+        [["测试条件"], ["快速", "敏捷"]] // validation vs systems
+      ];
+
+      for (const [constraintsA, constraintsB] of incompatiblePairs) {
+        const agentAConstraints = keywordsA.some(k => constraintsA.includes(k));
+        const agentBConstraints = keywordsB.some(k => constraintsB.includes(k));
+
+        if (agentAConstraints && agentBConstraints) {
+          conflicts.push({
+            type: "constraint",
+            involvedAgents: [agentA.agentType, agentB.agentType],
+            description: `${agentA.agentType}的约束条件(${keywordsA.join("/")})与${agentB.agentType}的约束条件(${keywordsB.join("/")})不兼容`,
+            severity: "medium",
+            resolutionStrategy: "需重新评估约束条件的必要性和可执行性,寻求折中方案或分阶段实施"
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+function detectEvidenceConflicts(outputs: AgentOutput[]): Conflict[] {
+  const conflicts: Conflict[] = [];
+
+  for (let i = 0; i < outputs.length; i++) {
+    for (let j = i + 1; j < outputs.length; j++) {
+      const agentA = outputs[i];
+      const agentB = outputs[j];
+
+      if (!agentA || !agentB) continue;
+
+      // Check for contradictory falsifiable evidence
+      const falsifiableA = agentA.falsifiable ?? "";
+      const falsifiableB = agentB.falsifiable ?? "";
+
+      if (!falsifiableA || !falsifiableB) continue;
+
+      // Evidence contradictions
+      const contradictionPatterns = [
+        { pattern1: ["必然"], pattern2: ["可能", "也许", "不确定"] },
+        { pattern1: ["不可能"], pattern2: ["可行", "可以实现"] },
+        { pattern1: ["完全", "总是"], pattern2: ["很少", "有时"] },
+        { pattern1: ["增加"], pattern2: ["减少", "下降"] },
+        { pattern1: ["稳定"], pattern2: ["波动", "不稳定"] }
+      ];
+
+      for (const { pattern1, pattern2 } of contradictionPatterns) {
+        const hasPattern1 = pattern1.some(p => falsifiableA.includes(p));
+        const hasPattern2 = pattern2.some(p => falsifiableB.includes(p));
+
+        if (hasPattern1 && hasPattern2) {
+          conflicts.push({
+            type: "evidence",
+            involvedAgents: [agentA.agentType, agentB.agentType],
+            description: `${agentA.agentType}的可证伪点"${falsifiableA.substring(0, 50)}..."与${agentB.agentType}的可证伪点"${falsifiableB.substring(0, 50)}..."存在逻辑矛盾`,
+            severity: "high",
+            resolutionStrategy: "需重新验证双方证据,明确适用条件和边界条件,或寻求第三方验证"
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
 export function suggestResolution(conflict: Conflict): string {
   if (conflict.resolutionStrategy) {
     return conflict.resolutionStrategy;
@@ -187,6 +344,12 @@ export function suggestResolution(conflict: Conflict): string {
       return "按优先级排序(Risk > Governance > Systems > Econ/Socio/Culture > Validation)采纳建议";
     case "risk_amplification":
       return "启动风险缓解方案,建立缓冲与冗余机制,降低整体脆弱性";
+    case "goal":
+      return "需明确优先级顺序,建立目标权衡机制,寻求多目标共赢方案";
+    case "constraint":
+      return "需重新评估约束条件的必要性和可执行性,寻求折中方案或分阶段实施";
+    case "evidence":
+      return "需重新验证双方证据,明确适用条件和边界条件,或寻求第三方验证";
     default:
       return "需人工审查并决策";
   }

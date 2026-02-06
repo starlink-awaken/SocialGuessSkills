@@ -16,7 +16,7 @@ export interface AgentOutput {
 }
 
 export interface Conflict {
-  type: 'logical' | 'priority' | 'risk_amplification';
+  type: 'logical' | 'priority' | 'risk_amplification' | 'goal' | 'constraint' | 'evidence';
   involvedAgents: AgentType[];
   description: string;
   severity: 'low' | 'medium' | 'high';
