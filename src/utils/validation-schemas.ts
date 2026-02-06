@@ -4,10 +4,11 @@
 
 import type { AgentType, Hypothesis } from "./types";
 
-export interface ValidationError {
+ export interface ValidationError {
   field: string;
   expectedType: string;
   received: any;
+  receivedUnknown?: any;
   allowedValues?: any[];
   message: string;
 }
@@ -181,7 +182,7 @@ export function validateHypothesis(hypothesis: unknown): ValidationResult {
   };
 }
 
-export function validateMaxIterations(maxIterations: unknown): ValidationResult {
+export function validateMaxIterations(maxIterations: number): ValidationResult {
   const errors: ValidationError[] = [];
 
   if (typeof maxIterations !== 'number') {
@@ -209,7 +210,7 @@ export function validateMaxIterations(maxIterations: unknown): ValidationResult 
   };
 }
 
-export function validateAgentType(agentType: unknown): ValidationResult {
+export function validateAgentType(agentType: string): ValidationResult {
   const errors: ValidationError[] = [];
 
   if (typeof agentType !== 'string') {
