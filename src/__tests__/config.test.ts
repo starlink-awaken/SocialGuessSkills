@@ -11,6 +11,14 @@ test("config 字段类型与范围检查", () => {
   const allowed = ['fatal','error','warn','info','debug','trace','silent'];
   expect(allowed.includes(config.LOG_LEVEL)).toBe(true);
   expect(typeof config.MAX_RETRIES).toBe("number");
+  const llmProviders = ["auto", "anthropic", "mock"];
+  expect(llmProviders.includes(config.LLM_PROVIDER)).toBe(true);
+  expect(typeof config.LLM_MODEL).toBe("string");
+  expect(typeof config.LLM_MAX_TOKENS).toBe("number");
+  expect(typeof config.LLM_TIMEOUT_MS).toBe("number");
+  expect(typeof config.AGENT_MOCK_MODE).toBe("boolean");
+  expect(typeof config.FAIL_ON_CRITICAL).toBe("boolean");
+  expect(Array.isArray(config.CRITICAL_AGENTS)).toBe(true);
 });
 
 test("validateConfig 在有/无 ANTHROPIC_API_KEY 时的行为 (动态)", () => {

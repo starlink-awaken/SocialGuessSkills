@@ -13,6 +13,7 @@ export interface AgentOutput {
   risks: string[];
   suggestions: string[];
   falsifiable: string;
+  error?: string;
 }
 
 export interface Conflict {
@@ -32,7 +33,15 @@ export interface SocialSystemModel {
     iterations: number;
     confidence: number;
     generatedAt: string;
+    failures?: AgentFailure[];
   };
+}
+
+export interface AgentFailure {
+  agentType: AgentType;
+  error: string;
+  iteration: number;
+  timestamp: string;
 }
 
 export interface SystemStructure {
@@ -104,6 +113,7 @@ export interface WorkflowState {
   agentResults: Map<AgentType, AgentOutput>;
   conflicts: Conflict[];
   history: WorkflowSnapshot[];
+  failures: AgentFailure[];
 }
 
 interface WorkflowSnapshot {

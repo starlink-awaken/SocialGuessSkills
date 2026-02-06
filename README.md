@@ -37,6 +37,19 @@ bun run examples/run-example.ts
 - Agent输出数量: 7(每个Agent都会生成分析)
 - 冲突数量: 7(逻辑矛盾、优先级冲突、风险叠加)
 
+### 运行配置（环境变量）
+
+默认使用模拟输出，可通过环境变量切换真实 LLM 与失败策略：
+
+- `LLM_PROVIDER`: `auto` | `anthropic` | `mock`（默认 `auto`）
+- `ANTHROPIC_API_KEY`: 使用 Anthropic 时必填
+- `LLM_MODEL`: 模型名称（默认 `claude-3-5-sonnet-20241022`）
+- `LLM_MAX_TOKENS`: 最大输出 token（默认 `4096`）
+- `LLM_TIMEOUT_MS`: LLM 超时毫秒数（默认 `60000`）
+- `AGENT_MOCK_MODE`: 强制 mock（`true`/`false`，默认 `false`）
+- `FAIL_ON_CRITICAL`: 关键 Agent 失败时中断流程（默认 `true`）
+- `CRITICAL_AGENTS`: 关键 Agent 列表（默认 `risk,governance,systems`）
+
 ### MCP集成(推荐)
 
 **在Claude Desktop中配置**:

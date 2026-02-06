@@ -4,12 +4,14 @@ import type {
   WorkflowState, 
   AgentOutput, 
   SystemStructure,
-  AgentType
+  AgentType,
+  AgentFailure
 } from "../types";
 import { createAllAgents } from "../agents/agent-factory";
-import { executeAgent } from "../agents/agent-executor";
+import { buildErrorOutput, executeAgent } from "../agents/agent-executor";
 import { detectConflicts } from "./conflict-resolver";
 import { logger } from '../utils/logger.js';
+import { config } from "../utils/config.js";
 
 // Agent cache for memoization across iterations
 interface AgentCacheEntry {
@@ -20,6 +22,7 @@ interface AgentCacheEntry {
 }
 
 const agentCache = new Map<string, AgentCacheEntry>();
+const criticalAgents = new Set<AgentType>(config.CRITICAL_AGENTS as AgentType[]);
 
 function getCacheKey(agentType: AgentType, hypothesis: Hypothesis): string {
   return `${agentType}:${JSON.stringify(hypothesis)}`;
@@ -37,7 +40,8 @@ export async function runWorkflow(
     maxIterations,
     agentResults: new Map(),
     conflicts: [],
-    history: []
+    history: [],
+    failures: []
   };
 
   const agents = await createAllAgents();
@@ -94,8 +98,6 @@ async function step2_ExecuteAgents(
   logger.info("Step 2: 并行执行Agent推演");
 
   const agentPromises: Promise<void>[] = [];
-  const totalAgents = agents.size;
-  let completedAgents = 0;
 
   for (const [agentType, agent] of agents) {
     if (!state.agentResults.has(agentType) || state.iteration > 1) {
@@ -105,7 +107,6 @@ async function step2_ExecuteAgents(
       if (cached && state.iteration > 1) {
         logger.info(`Using cached result for ${agentType} Agent (iteration ${state.iteration})`);
         state.agentResults.set(agentType, cached.result);
-        completedAgents += 1;
         agentPromises.push(Promise.resolve());
         continue;
       }
@@ -118,7 +119,6 @@ async function step2_ExecuteAgents(
         agentType
       }).then(output => {
         state.agentResults.set(agentType, output);
-        completedAgents += 1;
 
         logger.info(`✓ ${agentType} Agent 完成`);
         agentCache.set(cacheKey, {
@@ -128,7 +128,21 @@ async function step2_ExecuteAgents(
           timestamp: Date.now()
         });
       }).catch(error => {
-        logger.error({ err: String(error), agent: String(agentType) }, `✗ ${agentType} Agent 失败`);
+        const message = error instanceof Error ? error.message : String(error);
+        const failure: AgentFailure = {
+          agentType,
+          error: message,
+          iteration: state.iteration,
+          timestamp: new Date().toISOString()
+        };
+        state.failures.push(failure);
+        state.agentResults.set(agentType, buildErrorOutput(agentType, error));
+
+        logger.error({ err: message, agent: String(agentType) }, `✗ ${agentType} Agent 失败`);
+
+        if (config.FAIL_ON_CRITICAL && criticalAgents.has(agentType)) {
+          throw new Error(`Critical agent failed: ${agentType}`);
+        }
       });
 
       agentPromises.push(promise);
@@ -176,7 +190,8 @@ async function step4_SynthesizeModel(
     metadata: {
       iterations: state.iteration,
       confidence: calculateConfidence(state),
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      failures: state.failures.length > 0 ? state.failures : undefined
     }
   };
 
@@ -202,6 +217,10 @@ async function step5_ValidateModel(
 
   if (model.agentOutputs.length < 7) {
     logger.warn({ missing: 7 - model.agentOutputs.length }, "⚠ 警告: 缺少Agent输出");
+  }
+
+  if (model.metadata.failures && model.metadata.failures.length > 0) {
+    logger.warn({ failures: model.metadata.failures.length }, "⚠ 警告: 存在Agent失败记录");
   }
 
   logger.info("✓ 模型验证完成");
@@ -302,6 +321,8 @@ function calculateConfidence(state: WorkflowState): number {
 
   const agentRatio = agentCount / maxAgents;
 
+  const failureRatio = Math.min(1, state.failures.length / maxAgents);
+
   const conflictScore = state.conflicts.reduce((sum, c) => {
     const severityValue = { low: 1, medium: 2, high: 3 };
     return sum + severityValue[c.severity];
@@ -310,7 +331,7 @@ function calculateConfidence(state: WorkflowState): number {
   const maxConflictScore = state.agentResults.size * 3;
   const conflictRatio = 1 - (conflictScore / maxConflictScore);
 
-  const confidence = (agentRatio * 0.7) + (conflictRatio * 0.3);
+  const confidence = (agentRatio * 0.6) + (conflictRatio * 0.3) + ((1 - failureRatio) * 0.1);
 
   return Math.max(0, Math.min(1, confidence));
 }

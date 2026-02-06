@@ -19,9 +19,10 @@ interface MCPResponse {
 }
 
 async function callMCPServer(request: MCPRequest): Promise<MCPResponse> {
+  const bunPath = process.execPath || "bun";
   const serverProcess = Bun.spawn({
-    cmd: ["bun", "run", "src/server.ts"],
-    cwd: "/Volumes/Model/Workspace/Skills/local/SocialGuessSkills",
+    cmd: [bunPath, "run", "src/server.ts"],
+    cwd: process.cwd(),
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
