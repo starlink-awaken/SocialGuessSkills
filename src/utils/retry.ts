@@ -41,6 +41,40 @@ function sleep(ms: number) {
   return new Promise<void>((res) => setTimeout(res, ms));
 }
 
+function calculateExponentialDelay(
+  attempt: number,
+  baseDelayMs: number,
+  maxDelayMs: number,
+  jitter: boolean
+): number {
+  const expDelay = Math.min(maxDelayMs, baseDelayMs * (2 ** attempt));
+  let delay = expDelay;
+
+  if (jitter) {
+    delay = Math.floor(Math.random() * expDelay);
+  }
+
+  return delay;
+}
+
+function parseRetryAfterHeader(headers: Record<string, unknown>, currentDelay: number): number {
+  const retryAfter = headers['retry-after'] ?? headers['Retry-After'];
+  if (!retryAfter) return currentDelay;
+
+  const parsed = parseInt(String(retryAfter), 10);
+  if (!Number.isNaN(parsed)) {
+    return Math.max(currentDelay, parsed * 1000);
+  }
+
+  const d = Date.parse(String(retryAfter));
+  if (!Number.isNaN(d)) {
+    const ms = d - Date.now();
+    if (ms > 0) return Math.max(currentDelay, ms);
+  }
+
+  return currentDelay;
+}
+
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   options: RetryOptions = {}
@@ -66,32 +100,11 @@ export async function retryWithBackoff<T>(
       const willRetry = attempt < maxRetries && shouldRetry(err);
       if (!willRetry) break;
 
-      // exponential backoff: base * 2^attempt
-      const expDelay = Math.min(maxDelayMs, baseDelayMs * (2 ** attempt));
-      let delay = expDelay;
+      let delay = calculateExponentialDelay(attempt, baseDelayMs, maxDelayMs, jitter);
 
-      if (jitter) {
-        // full jitter: random between 0 and expDelay
-        delay = Math.floor(Math.random() * expDelay);
-      }
-
-      // If error contains Retry-After header and it's parseable, use it (seconds or HTTP-date)
       if (isErrorWithStatus(err)) {
         const headers = (err as any).headers ?? {};
-        const ra = headers['retry-after'] ?? headers['Retry-After'];
-        if (ra) {
-          const parsed = parseInt(String(ra), 10);
-          if (!Number.isNaN(parsed)) {
-            delay = Math.max(delay, parsed * 1000);
-          } else {
-            // try parse HTTP-date
-            const d = Date.parse(String(ra));
-            if (!Number.isNaN(d)) {
-              const ms = d - Date.now();
-              if (ms > 0) delay = Math.max(delay, ms);
-            }
-          }
-        }
+        delay = parseRetryAfterHeader(headers, delay);
       }
 
       await sleep(delay);

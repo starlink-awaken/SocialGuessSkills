@@ -98,3 +98,6 @@ export const MAX_STRING_LENGTH: number = 1000;
 
 // Default timeout for AI calls (ms)
 export const DEFAULT_TIMEOUT: number = 5000;
+
+// Path constants
+export const PROMPTS_DIR = 'src/agents/prompts';
