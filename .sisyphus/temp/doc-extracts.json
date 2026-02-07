@@ -1,0 +1,48 @@
+{
+  "architecture": {
+    "summary": "社会体系建模多Agent系统,采用4层架构: Server(协议层)→Workflow(编排层)→Agents(执行层)→Prompts(模板层)",
+    "layers": [
+      "Server Layer - MCP Protocol实现,处理AI请求和响应",
+      "Workflow Layer - 6步编排引擎(验证→执行→冲突对齐→合成→验证→迭代)",
+      "Agent Layer - 7个专业Agent生命周期管理(Systems/Econ/Socio/Governance/Culture/Risk/Validation)",
+      "Agent Prompts Layer - 7个Prompt模板,定义每个Agent的专长和推理框架"
+    ],
+    "components": {
+      "server": "McpServer, Tool注册(3个工具: reasoning/query_agent/validate_model)",
+      "workflow": "orchestrator.ts(6步流程), conflict-resolver.ts(3种冲突检测规则)",
+      "agents": "agent-factory.ts(创建7个Agent), agent-executor.ts(执行推理), llm-client.ts(AI集成)",
+      "prompts": "src/agents/prompts/*.md (7个Prompt文件)"
+    },
+    "data_flow": "Claude/AI → MCP Protocol → Server → Orchestrator → Agents → Claude/AI"
+  },
+  "tech_stack": [
+    "TypeScript - 类型安全,strict模式",
+    "Bun Runtime - 快速执行,bun install/test/run",
+    "MCP SDK - Model Context Protocol集成",
+    "Anthropic SDK - 真实AI集成(未来版本)",
+    "Pino - 日志记录"
+  ],
+  "conventions": {
+    "runtime": "Bun (非node/npm/pnpm)",
+    "dependencies": "bun install (非npm install)",
+    "test": "bun test src/__tests__/ (非jest/vitest)",
+    "server": "bun run src/server.ts",
+    "module_import": "使用.js扩展名 (ESM模块)",
+    "sqlite": "bun:sqlite (非better-sqlite3)",
+    "documentation": "CLAUDE.md约定AI交互规范"
+  },
+  "key_design_decisions": [
+    "使用Prompt-based Agent而非训练独立AI模型 - 灵活性和可解释性",
+    "6步工作流而非完全自治Agent协商 - 可预测性和可控性",
+    "3种冲突检测规则(逻辑/优先级/风险叠加) - 覆盖关键冲突类型",
+    "最大迭代3次 - 效率平衡,防止无限循环",
+    "9层社会体系模型结构 - 全面性和结构化"
+  ],
+  "extracted_at": "2026-02-05T15:52:55Z",
+  "source_files": [
+    "ARCHITECTURE.md",
+    "README.md",
+    "CLAUDE.md",
+    "AGENTS.md"
+  ]
+}

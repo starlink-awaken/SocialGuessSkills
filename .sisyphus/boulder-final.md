@@ -1,0 +1,13 @@
+{
+  "active_plan": null,
+  "completed_plan": "/Volumes/Model/Workspace/Skills/local/SocialGuessSkills/.sisyphus/plans/socialguess-improvement.md",
+  "started_at": "2026-02-07T06:15:10.692Z",
+  "session_ids": ["ses_3ca05527bffefQgjCBLy0j331D", "ses_3c94f3ee9ffe0edbYT7l2wpxzi", "ses_3ca05527bffefQgjCBLy0j331D"],
+  "plan_name": "socialguess-improvement",
+  "progress": {
+    "completed_tasks": 10,
+    "total_tasks": 10,
+    "current_phase": "Complete"
+  },
+  "completed_at": "2026-02-07T09:00:00.000Z"
+}

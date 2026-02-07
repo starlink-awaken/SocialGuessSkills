@@ -22,6 +22,49 @@ cd SocialGuessSkills
 
 # 安装依赖
 bun install
+
+# 安装Biome
+bun add -d biome
+```
+
+### 配置Biome
+
+1. 初始化Biome配置:
+
+```bash
+biome init
+```
+
+2. 编辑生成的`biome.json`文件以适配项目需求:
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {},
+      "style": {}
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  }
+}
+```
+
+3. 运行Biome检查:
+
+```bash
+biome check
 ```
 
 ### 运行示例

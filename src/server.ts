@@ -168,7 +168,7 @@ const healthConfig: any = {
 
 async function main() {
   const transport = new StdioServerTransport();
-  await mcpServer.server.connect(transport);
+  await mcpServer.connect(transport);
   logger.info("[MCP] Social Modeling MCP Server running on stdio");
   // Start a lightweight HTTP server to expose /metrics (Prometheus text format)
   const httpServer = createNodeServer((req, res) => {

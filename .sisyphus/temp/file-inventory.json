@@ -1,0 +1,47 @@
+{
+  "total_files": 23,
+  "scanned_at": "2026-02-05T15:52:55Z",
+  "modules": {
+    "agents": {
+      "count": 3,
+      "files": [
+        "src/agents/llm-client.ts",
+        "src/agents/agent-executor.ts",
+        "src/agents/agent-factory.ts"
+      ]
+    },
+    "workflow": {
+      "count": 2,
+      "files": [
+        "src/workflow/conflict-resolver.ts",
+        "src/workflow/orchestrator.ts"
+      ]
+    },
+    "utils": {
+      "count": 8,
+      "files": [
+        "src/utils/cost-predictor.ts",
+        "src/utils/circuit-breaker.ts",
+        "src/utils/retry.ts",
+        "src/utils/logger.ts",
+        "src/utils/request-queue.ts",
+        "src/utils/token-counter.ts",
+        "src/utils/config.ts",
+        "src/utils/cost-alert.ts"
+      ]
+    },
+    "tests": {
+      "count": 7,
+      "files": [
+        "src/__tests__/example.test.ts",
+        "src/__tests__/e2e.test.ts",
+        "src/__tests__/retry.test.ts",
+        "src/__tests__/token-counter.test.ts",
+        "src/__tests__/orchestrator.test.ts",
+        "src/__tests__/conflict-resolver.test.ts",
+        "src/__tests__/config.test.ts"
+      ]
+    }
+  },
+  "prompts_directory": "src/agents/prompts/"
+}
