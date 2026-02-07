@@ -34,7 +34,7 @@ async function callMCPServer(request: MCPRequest): Promise<MCPResponse> {
   serverProcess.stdin.flush();
   serverProcess.stdin.end();
 
-  await Bun.sleep(500);
+  await Bun.sleep(2000);  // Increased timeout for server startup
 
   const stdout = await new Response(serverProcess.stdout).text();
   const stderr = await new Response(serverProcess.stderr).text();
