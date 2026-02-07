@@ -129,3 +129,47 @@ test("工作流编排器 - 空可证伪点处理", async () => {
   expect(calculateSimilarity("", "x")).toBe(0);
   expect(calculateSimilarity("x", "")).toBe(0);
 });
+
+test("工作流编排器 - 记录收敛元数据", async () => {
+  const hypothesis: Hypothesis = {
+    assumptions: ["测试假设"],
+    constraints: [],
+    goals: ["测试目标"]
+  };
+
+  const model = await runWorkflow(hypothesis, { maxIterations: 3, convergenceThreshold: 0.9 });
+
+  expect(model.metadata.convergedAtIteration).toBeDefined();
+  expect(model.metadata.convergedAtIteration).toBe(2);
+  expect(model.metadata.finalSimilarity).toBeDefined();
+  expect(model.metadata.finalSimilarity).toBeGreaterThanOrEqual(0.9);
+});
+
+test("工作流编排器 - 空输出不崩溃", async () => {
+  const hypothesis: Hypothesis = {
+    assumptions: ["测试"],
+    constraints: [],
+    goals: ["目标"]
+  };
+
+  const model = await runWorkflow(hypothesis, { maxIterations: 2, convergenceThreshold: 0.5 });
+
+  expect(model).toBeDefined();
+  expect(model.agentOutputs).toBeDefined();
+  expect(model.metadata).toBeDefined();
+});
+
+test("工作流编排器 - 使用默认收敛阈值0.9", async () => {
+  const hypothesis: Hypothesis = {
+    assumptions: ["测试"],
+    constraints: [],
+    goals: ["目标"]
+  };
+
+  const model = await runWorkflow(hypothesis, { maxIterations: 3 });
+
+  expect(model).toBeDefined();
+  if (model.metadata.convergedAtIteration) {
+    expect(model.metadata.finalSimilarity).toBeGreaterThanOrEqual(0.9);
+  }
+});

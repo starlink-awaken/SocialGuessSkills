@@ -53,6 +53,8 @@ export async function runWorkflow(
   const agents = await createAllAgents();
 
   let previousOutputs: AgentOutput[] | null = null;
+  let convergedAtIteration: number | undefined = undefined;
+  let finalSimilarity: number | undefined = undefined;
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     state.iteration = iteration;
@@ -70,8 +72,12 @@ export async function runWorkflow(
         logger.info(
           `✓ Workflow converged at iteration ${iteration} (similarity: ${similarity.toFixed(2)})`
         );
+        convergedAtIteration = iteration;
+        finalSimilarity = similarity;
         const model = await step4_SynthesizeModel(hypothesis, state);
         await step5_ValidateModel(model, state);
+        model.metadata.convergedAtIteration = convergedAtIteration;
+        model.metadata.finalSimilarity = finalSimilarity;
         return model;
       }
     }

@@ -34,6 +34,8 @@ export interface SocialSystemModel {
     confidence: number;
     generatedAt: string;
     failures?: AgentFailure[];
+    convergedAtIteration?: number;
+    finalSimilarity?: number;
   };
 }
 
