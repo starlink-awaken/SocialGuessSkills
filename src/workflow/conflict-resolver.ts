@@ -40,8 +40,11 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
       const falsifiableA = agentA.falsifiable ?? "";
       const falsifiableB = agentB.falsifiable ?? "";
 
-      const hasConflict = falsifiableB.toLowerCase().includes(keywordsA.join("|")) ||
-                        falsifiableA.toLowerCase().includes(keywordsB.join("|"));
+      const hasConflict = keywordsA.some(kw => 
+        falsifiableB.toLowerCase().includes(kw.toLowerCase())
+      ) || keywordsB.some(kw => 
+        falsifiableA.toLowerCase().includes(kw.toLowerCase())
+      );
 
       if (hasConflict) {
         conflicts.push({
