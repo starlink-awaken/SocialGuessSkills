@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+.lockb
+*.generated.ts
+.sisyphus/
+.env
+.env.*
