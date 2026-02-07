@@ -4,6 +4,8 @@ import type { Hypothesis, AgentType } from "./types.js";
 import { runWorkflow, queryAgent } from "./workflow/orchestrator.js";
 import { globalTokenCounter } from "./utils/token-counter.js";
 import { childLogger, logger } from "./utils/logger.js";
+import { GLMCostTracker } from "./utils/glm-cost-tracker.js";
+import { BudgetMonitor } from "./utils/budget-monitor.js";
 import { createServer as createNodeServer } from "http";
 
 const mcpServer = new McpServer({
@@ -164,6 +166,43 @@ const healthConfig: any = {
     const ts = new Date().toISOString();
     return { content: [{ type: "text" as const, text: JSON.stringify({ status: "error", timestamp: ts, message: "health check failed" }) }], isError: true } as any;
   }
+});
+
+type GLMCostReportArgs = {
+  period: "today" | "week" | "month";
+};
+
+const glmCostReportConfig: any = {
+  description: "查询 GLM 成本报告(今日/本周/本月)",
+  inputSchema: {
+    type: "object",
+    properties: {
+      period: { type: "string", enum: ["today", "week", "month"] }
+    },
+    required: ["period"]
+  }
+};
+
+(mcpServer as any).registerTool("get_glm_cost_report", glmCostReportConfig, async (args: GLMCostReportArgs, _extra?: any): Promise<any> => {
+  const tracker = new GLMCostTracker();
+  const monitor = new BudgetMonitor(tracker);
+  const now = new Date();
+  let report;
+  switch (args.period) {
+    case "today":
+      report = monitor.getDailyReport(now);
+      break;
+    case "week":
+      report = monitor.getWeeklyReport(now);
+      break;
+    case "month":
+      report = monitor.getMonthlyReport(now);
+      break;
+    default:
+      report = monitor.getDailyReport(now);
+  }
+
+  return { content: [{ type: "text" as const, text: JSON.stringify(report, null, 2) }] } as any;
 });
 
 async function main() {
