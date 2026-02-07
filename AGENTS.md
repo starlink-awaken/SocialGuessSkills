@@ -64,9 +64,13 @@ All agents must return: `{ conclusion, evidence[], risks[], suggestions[], falsi
 - Read prompts via `readFileSync` from `src/agents/prompts/`
 
 ## ANTI-PATTERNS (THIS PROJECT)
-- No real LLM integration - `simulateAICall()` returns mock data
-- No DO NOT/NEVER/ALWAYS comments found in codebase
-- No eslint/prettier config (tsconfig.json only)
+- **No real LLM integration** - `simulateAICall()` returns mock data (17 hardcoded outputs)
+- **Missing code standards comments** - No DO NOT/NEVER/ALWAYS comments in codebase
+- **No code formatting tools** - No eslint/prettier config (tsconfig.json only)
+- **Excessive `any` type usage** - 17 occurrences across 5 files (primarily server.ts)
+- **Direct console API usage** - 9 instances of console.log/warn/error (violates Pino logging standards)
+- **Hardcoded timing delays** - 8 setTimeout/setInterval calls for mock delays (100-600ms)
+- **Hardcoded API endpoints** - API URL hardcoded in config/llm.ts (`https://open.bigmodel.cn/api/paas/v4`)
 
 ## UNIQUE STYLES
 - Agent execution is simulated with 100-600ms delays + hardcoded outputs
