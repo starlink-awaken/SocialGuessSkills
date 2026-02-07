@@ -5,7 +5,8 @@ import type {
   AgentOutput, 
   SystemStructure,
   AgentType,
-  AgentFailure
+  AgentFailure,
+  WorkflowConfig
 } from "../types";
 import { createAllAgents } from "../agents/agent-factory";
 import { buildErrorOutput, executeAgent } from "../agents/agent-executor";
@@ -30,9 +31,14 @@ function getCacheKey(agentType: AgentType, hypothesis: Hypothesis): string {
 
 export async function runWorkflow(
   hypothesis: Hypothesis,
-  options?: { maxIterations?: number }
+  options: WorkflowConfig = {}
 ): Promise<SocialSystemModel> {
-  const maxIterations = options?.maxIterations ?? 3;
+  const maxIterations = options.maxIterations ?? 3;
+  const convergenceThreshold = clampConvergenceThreshold(options.convergenceThreshold ?? 0.9);
+
+  if (!Number.isInteger(maxIterations) || maxIterations < 1) {
+    throw new Error("maxIterations必须为正整数");
+  }
   
   const state: WorkflowState = {
     currentStep: 1,
@@ -46,14 +52,30 @@ export async function runWorkflow(
 
   const agents = await createAllAgents();
 
+  let previousOutputs: AgentOutput[] | null = null;
+
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     state.iteration = iteration;
     logger.info({ iteration, maxIterations }, `=== 迭代 ${iteration}/${maxIterations} ===`);
 
     await step1_ValidateHypothesis(hypothesis, state);
     await step2_ExecuteAgents(agents, hypothesis, state);
+    const currentOutputs = Array.from(state.agentResults.values());
     state.conflicts = detectConflicts(Array.from(state.agentResults.values()));
     await step3_AlignConflicts(state);
+
+    if (previousOutputs) {
+      const similarity = compareOutputs(previousOutputs, currentOutputs);
+      if (similarity >= convergenceThreshold) {
+        logger.info(
+          `✓ Workflow converged at iteration ${iteration} (similarity: ${similarity.toFixed(2)})`
+        );
+        const model = await step4_SynthesizeModel(hypothesis, state);
+        await step5_ValidateModel(model, state);
+        return model;
+      }
+    }
+    previousOutputs = currentOutputs;
 
     // Add convergence check: stop early if no conflicts detected
     if (state.conflicts.length === 0) {
@@ -335,6 +357,67 @@ function calculateConfidence(state: WorkflowState): number {
 
   return Math.max(0, Math.min(1, confidence));
 }
+
+function compareOutputs(previousOutputs: AgentOutput[], currentOutputs: AgentOutput[]): number {
+  if (currentOutputs.length === 0) {
+    return 0;
+  }
+  if (previousOutputs.length === 0) {
+    return 0;
+  }
+
+  const previousByType = new Map(previousOutputs.map(output => [output.agentType, output]));
+  let similaritySum = 0;
+
+  for (const current of currentOutputs) {
+    const previous = previousByType.get(current.agentType);
+    if (!previous) {
+      continue;
+    }
+
+    const similarity = calculateSimilarity(previous.falsifiable ?? "", current.falsifiable ?? "");
+    similaritySum += similarity;
+  }
+
+  return similaritySum / currentOutputs.length;
+}
+
+function calculateSimilarity(previous: string, current: string): number {
+  const previousWords = tokenizeWords(previous);
+  const currentWords = tokenizeWords(current);
+
+  if (previousWords.size === 0 || currentWords.size === 0) {
+    return 0;
+  }
+
+  let intersection = 0;
+  for (const word of previousWords) {
+    if (currentWords.has(word)) {
+      intersection += 1;
+    }
+  }
+
+  const union = new Set([...previousWords, ...currentWords]).size;
+  return union === 0 ? 0 : intersection / union;
+}
+
+function tokenizeWords(text: string): Set<string> {
+  return new Set(text.toLowerCase().split(/\s+/).map(word => word.trim()).filter(Boolean));
+}
+
+function clampConvergenceThreshold(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0.9;
+  }
+  return Math.max(0, Math.min(1, value));
+}
+
+export const __test__ = {
+  compareOutputs,
+  calculateSimilarity,
+  tokenizeWords,
+  clampConvergenceThreshold
+};
 
 export async function queryAgent(
   agentType: AgentType,

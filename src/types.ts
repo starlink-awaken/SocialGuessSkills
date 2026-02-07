@@ -106,6 +106,11 @@ export interface SystemStructure {
   };
 }
 
+export interface WorkflowConfig {
+  maxIterations?: number;
+  convergenceThreshold?: number;
+}
+
 export interface WorkflowState {
   currentStep: number;
   iteration: number;
