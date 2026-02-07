@@ -18,7 +18,7 @@
     "@typescript-eslint/parser": "8",
     "pino": "^10.3.0",
     "zhipuai-sdk-nodejs-v4": "^0.1.12",
-    "zod": "^4.3.6"
+    "zod": "^3.22"
   },
   "devDependencies": {
     "@types/node": "^25.2.1",
