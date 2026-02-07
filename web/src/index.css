@@ -367,3 +367,56 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1e293b;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.export-button {
+  padding: 0.5rem 1rem;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.export-button:hover {
+  background-color: #5568d3;
+  transform: translateY(-1px);
+}
+
+.export-button.json {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.export-button.md {
+  background-color: #10b981;
+}
+
+.export-button.md:hover {
+  background-color: #059669;
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HypothesisForm } from './components/HypothesisForm';
+import { exportToJSON, downloadJSON, exportToMarkdown, downloadMarkdown } from './lib/export';
 import type { Hypothesis } from './types';
 import './index.css';
 
@@ -98,7 +99,35 @@ function App() {
 
         {model && (
           <section className="section">
-            <h2>Model Results</h2>
+            <div className="section-header">
+              <h2>Model Results</h2>
+              <div className="export-buttons">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (hypothesis) {
+                      const jsonData = exportToJSON(model, hypothesis);
+                      downloadJSON(jsonData);
+                    }
+                  }}
+                  className="export-button json"
+                >
+                  Export JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (hypothesis) {
+                      const mdData = exportToMarkdown(model, hypothesis);
+                      downloadMarkdown(mdData);
+                    }
+                  }}
+                  className="export-button md"
+                >
+                  Export Markdown
+                </button>
+              </div>
+            </div>
             <div className="model-results">
               <div className="result-card">
                 <h3>Confidence Score</h3>

@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # MCP Server (production)
+  socialguess-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: socialguess:latest
+    container_name: socialguess-mcp
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - GLM_API_KEY=${GLM_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - socialguess-network
+    healthcheck:
+      test: ["CMD", "bun", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Web UI (development)
+  web-ui-dev:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: socialguess-web:dev
+    container_name: socialguess-web-dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+    volumes:
+      - ./web/src:/app/src
+      - ./web/public:/app/public
+    networks:
+      - socialguess-network
+    command: ["bun", "--hot", "run", "index.ts"]
+
+networks:
+  socialguess-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
+  logs:
+    driver: local
