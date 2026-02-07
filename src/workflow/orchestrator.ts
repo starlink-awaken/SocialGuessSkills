@@ -12,6 +12,8 @@ import { executeAgent } from "../agents/agent-executor";
 import { detectConflicts } from "./conflict-resolver";
 import { resolveExecutionWaves, recordWaveStart, recordWaveEnd } from "./dependency-analyzer.js";
 import { logger } from '../utils/logger.js';
+import { HypothesisRepository } from '../database/repositories/hypothesis-repository.js';
+import { ModelRepository } from '../database/repositories/model-repository.js';
 
 // Agent cache for memoization across iterations
 interface AgentCacheEntry {
@@ -31,6 +33,8 @@ export async function runWorkflow(
   hypothesis: Hypothesis,
   options: WorkflowConfig = {}
 ): Promise<SocialSystemModel> {
+  const hypothesisRepo = new HypothesisRepository();
+  const modelRepo = new ModelRepository();
   const maxIterations = options.maxIterations ?? 3;
   const convergenceThreshold = clampConvergenceThreshold(options.convergenceThreshold ?? 0.9);
 
@@ -52,6 +56,11 @@ export async function runWorkflow(
   let previousOutputs: AgentOutput[] | null = null;
   let convergedAtIteration: number | undefined = undefined;
   let finalSimilarity: number | undefined = undefined;
+
+  const persistModel = async (model: SocialSystemModel): Promise<void> => {
+    const hypothesisRecord = await hypothesisRepo.save(hypothesis);
+    modelRepo.save(hypothesisRecord.id, hypothesisRecord.hash, model);
+  };
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     state.iteration = iteration;
@@ -75,6 +84,7 @@ export async function runWorkflow(
         await step5_ValidateModel(model, state);
         model.metadata.convergedAtIteration = convergedAtIteration;
         model.metadata.finalSimilarity = finalSimilarity;
+        await persistModel(model);
         return model;
       }
     }
@@ -85,12 +95,14 @@ export async function runWorkflow(
       logger.info(`✓ Workflow converged in ${iteration + 1} iterations (no conflicts)`);
       const model = await step4_SynthesizeModel(hypothesis, state);
       await step5_ValidateModel(model, state);
+      await persistModel(model);
       return model;
     }
 
     if (iteration === maxIterations) {
       const model = await step4_SynthesizeModel(hypothesis, state);
       await step5_ValidateModel(model, state);
+      await persistModel(model);
       return model;
     }
   }
