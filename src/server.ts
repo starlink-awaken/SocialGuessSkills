@@ -1,12 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { Hypothesis, AgentType } from "./types.js";
+import type { Hypothesis, AgentType, SocialSystemModel } from "./types.js";
 import { runWorkflow, queryAgent } from "./workflow/orchestrator.js";
 import { globalTokenCounter } from "./utils/token-counter.js";
 import { childLogger, logger } from "./utils/logger.js";
 import { GLMCostTracker } from "./utils/glm-cost-tracker.js";
 import { BudgetMonitor } from "./utils/budget-monitor.js";
 import { createServer as createNodeServer } from "http";
+import { HypothesisRepository } from "./database/repositories/hypothesis-repository.js";
+import { ModelRepository } from "./database/repositories/model-repository.js";
 
 const mcpServer = new McpServer({
   name: "social-modeling-server",
@@ -122,6 +124,104 @@ const validateModelConfig: any = {
   } catch (error) {
     return { content: [{ type: "text" as const, text: JSON.stringify({ isValid: false, error: "无效的JSON格式", details: String(error) }, null, 2) }], isError: true } as any;
   }
+});
+
+interface QueryModelHistoryArgs {
+  hypothesisId?: number;
+  hypothesisHash?: string;
+  minConfidence?: number;
+  maxConfidence?: number;
+}
+
+const queryModelHistoryConfig: any = {
+  description: "查询历史模型记录: 按假设ID/哈希或置信度区间筛选",
+  inputSchema: {
+    type: "object",
+    properties: {
+      hypothesisId: { type: "number" },
+      hypothesisHash: { type: "string" },
+      minConfidence: { type: "number" },
+      maxConfidence: { type: "number" }
+    }
+  }
+};
+
+(mcpServer as any).registerTool("query_model_history", queryModelHistoryConfig, async (args: QueryModelHistoryArgs, _extra?: any): Promise<any> => {
+  const modelRepo = new ModelRepository();
+  const hypothesisRepo = new HypothesisRepository();
+  let records = [] as { modelJson: string }[];
+
+  if (typeof args.hypothesisId === "number") {
+    records = modelRepo.findByHypothesisId(args.hypothesisId);
+  } else if (typeof args.hypothesisHash === "string") {
+    const hypothesis = hypothesisRepo.findByHash(args.hypothesisHash);
+    if (hypothesis) {
+      records = modelRepo.findByHypothesisId(hypothesis.id);
+    }
+  } else if (typeof args.minConfidence === "number" && typeof args.maxConfidence === "number") {
+    records = modelRepo.findByConfidenceRange(args.minConfidence, args.maxConfidence);
+  } else {
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify({ error: "必须提供 hypothesisId/hypothesisHash 或 minConfidence/maxConfidence" }, null, 2) }],
+      isError: true
+    } as any;
+  }
+
+  const models = records
+    .map((record) => {
+      try {
+        return JSON.parse(record.modelJson) as SocialSystemModel;
+      } catch (error) {
+        logger.warn({ error }, "[MCP] Failed to parse model history JSON");
+        return null;
+      }
+    })
+    .filter((model): model is SocialSystemModel => !!model);
+
+  return { content: [{ type: "text" as const, text: JSON.stringify(models, null, 2) }] } as any;
+});
+
+interface GetModelByIdArgs {
+  id: number;
+}
+
+const getModelByIdConfig: any = {
+  description: "通过模型ID获取完整社会体系模型",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: { type: "number" }
+    },
+    required: ["id"]
+  }
+};
+
+  (mcpServer as any).registerTool("query_model_history", queryModelHistoryConfig, async (args: QueryModelHistoryArgs, _extra?: any): Promise<any> => {
+  const modelRepo = new ModelRepository();
+  let records: SocialSystemModel[] = [];
+
+  if (typeof args.hypothesisId === "number") {
+    records = modelRepo.findByHypothesisId(args.hypothesisId);
+  } else if (args.minConfidence !== undefined && args.maxConfidence !== undefined) {
+    records = modelRepo.findByConfidenceRange(args.minConfidence, args.maxConfidence);
+  } else {
+    records = modelRepo.findAll(args.limit || 10);
+  }
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: JSON.stringify({
+        total: records.length,
+        models: records.map(model => ({
+          id: (model.metadata as any).modelId || `model-${Date.now()}`,
+          hypothesisId: (model.metadata as any).hypothesisId || "",
+          confidence: (model.metadata as any).confidence || 0,
+          iterations: (model.metadata as any).iterations || 3,
+          conflicts: (model.metadata as any).conflicts || 0
+        }))
+    }, null, 2)
+  };
 });
 
 // Health check tool
