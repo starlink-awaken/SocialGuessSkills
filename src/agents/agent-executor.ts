@@ -1,4 +1,5 @@
 import type { AgentInstance, AgentOutput, AnalysisContext } from "../types";
+import { callLLM } from "../utils/llm-client.js";
 
 const MOCK_MODE_VALUES = new Set(["1", "true", "yes", "on"]);
 let forceMock = false;
@@ -170,7 +171,6 @@ async function simulateAICall(
 ): Promise<AgentOutput> {
   if (!shouldUseMock()) {
     try {
-      const { callLLM } = await import("../utils/llm-client.js");
       const response = await callLLM(prompt);
       return parseAgentOutput(agentType, response);
     } catch (error) {
