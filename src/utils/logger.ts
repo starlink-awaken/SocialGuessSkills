@@ -1,17 +1,16 @@
 import pino from 'pino';
 
-import { config } from './config.js';
+const logLevel = process.env.LOG_LEVEL || 'info';
 
-const level = config.LOG_LEVEL;
-
-// Timestamp in ISO format, field name: timestamp
 const logger = pino({
-  level,
-  timestamp: pino.stdTimeFunctions.isoTime,
-  formatters: {
-    level: (label: string) => ({ level: label })
+  level: logLevel,
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      translateTime: 'SYS:standard',
+      colorize: true,
+    },
   },
-  base: undefined // do not include pid/hostname by default
 });
 
 // Exported helper to include requestId in child logger
