@@ -323,3 +323,100 @@ test("冲突过滤 - 按严重级别", () => {
   const mediumAndAbove = filterConflictsBySeverity(conflicts, "medium");
   expect(mediumAndAbove.length).toBe(2);
 });
+
+// --- New tests for improved conflict detection ---
+
+test("冲突检测 - 不兼容Agent对检测", () => {
+  const outputs: AgentOutput[] = [
+    {
+      agentType: "econ",
+      conclusion: "激励机制促进增长",
+      evidence: [],
+      risks: [],
+      suggestions: [],
+      falsifiable: "若激励失效则增长停滞"
+    },
+    {
+      agentType: "socio",
+      conclusion: "公平分配维护稳定",
+      evidence: [],
+      risks: [],
+      suggestions: [],
+      falsifiable: "若分配不公则社会动荡"
+    }
+  ];
+
+  const conflicts = detectConflicts(outputs);
+  const logicalConflicts = conflicts.filter(c =>
+    c.type === "logical" &&
+    c.involvedAgents.includes("econ") &&
+    c.involvedAgents.includes("socio")
+  );
+
+  expect(logicalConflicts.length).toBe(1);
+  expect(logicalConflicts[0]?.description).toContain("张力");
+});
+
+test("冲突检测 - 语义否定检测", () => {
+  const outputs: AgentOutput[] = [
+    {
+      agentType: "systems",
+      conclusion: "反馈回路确保稳定",
+      evidence: [],
+      risks: [],
+      suggestions: [],
+      falsifiable: "若激励机制失效则系统不成立"
+    },
+    {
+      agentType: "econ",
+      conclusion: "激励结构促进效率",
+      evidence: [],
+      risks: [],
+      suggestions: [],
+      falsifiable: "若产权不清则激励无法运行"
+    }
+  ];
+
+  const conflicts = detectConflicts(outputs);
+  const logicalConflicts = conflicts.filter(c =>
+    c.type === "logical" &&
+    c.involvedAgents.includes("systems") &&
+    c.involvedAgents.includes("econ")
+  );
+
+  // systems' falsifiable contains "失效"(negation) + "激励"(econ keyword)
+  expect(logicalConflicts.length).toBeGreaterThanOrEqual(1);
+  expect(logicalConflicts[0]?.severity).toBe("high");
+});
+
+test("冲突检测 - 扩展Agent类型", () => {
+  const outputs: AgentOutput[] = [
+    {
+      agentType: "infrastructure",
+      conclusion: "基础设施扩张提升承载力",
+      evidence: [],
+      risks: [],
+      suggestions: ["建设新的水处理设施"],
+      falsifiable: "若基础设施不足则承载力不足"
+    },
+    {
+      agentType: "environmental",
+      conclusion: "生态保护优先于开发",
+      evidence: [],
+      risks: [],
+      suggestions: ["限制建设规模保护生态"],
+      falsifiable: "若生态破坏超过阈值则不可逆"
+    }
+  ];
+
+  const conflicts = detectConflicts(outputs);
+  const logicalConflicts = conflicts.filter(c =>
+    c.type === "logical" &&
+    c.involvedAgents.includes("infrastructure") &&
+    c.involvedAgents.includes("environmental")
+  );
+
+  // infrastructure + environmental is a known incompatible pair
+  expect(logicalConflicts.length).toBe(1);
+  expect(logicalConflicts[0]?.description).toContain("协调");
+});

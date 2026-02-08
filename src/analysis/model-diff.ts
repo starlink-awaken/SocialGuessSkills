@@ -126,7 +126,6 @@ function computeSummary(modelA: SocialSystemModel, modelB: SocialSystemModel): M
   modifiedFields += conflictsDiff.unchanged.length;
 
   totalChanges = addedFields + removedFields + modifiedFields;
-  totalChanges = addedFields + removedFields + modifiedFields;
 
   return { totalChanges, addedFields, removedFields, modifiedFields };
 }
@@ -246,7 +245,7 @@ function diffStructure(structureA: any, structureB: any): StructureDiff {
     const changes: Record<string, ArrayDiff<string>> = {};
     if (Array.isArray(layerA) && Array.isArray(layerB)) {
       for (const key in layerA) {
-        if (Array.isArray(layerB[key]) && Array.isArray(layerB[key])) {
+        if (Array.isArray(layerA[key]) && Array.isArray(layerB[key])) {
           const arrayDiff = diffArray(layerA[key], layerB[key]);
           changes[key] = arrayDiff;
         }

@@ -16,6 +16,15 @@ export function detectConflicts(outputs: AgentOutput[]): Conflict[] {
 function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
   const conflicts: Conflict[] = [];
 
+  // Known domain tension pairs where conclusions naturally conflict
+  const incompatiblePairs: [AgentType, AgentType, string][] = [
+    ["econ", "socio", "经济效率最大化与社会公平分配存在结构性张力"],
+    ["governance", "culture", "制度化管控与文化自主性之间需要平衡"],
+    ["risk", "econ", "风险规避与经济增长之间存在取舍"],
+    ["technology", "historical", "技术颠覆与历史路径依赖之间存在冲突"],
+    ["infrastructure", "environmental", "基础设施扩张与生态保护之间需要协调"],
+  ];
+
   const conclusionKeywords: Record<AgentType, string[]> = {
     systems: ["反馈", "回路", "稳定"],
     econ: ["激励", "产权", "效率"],
@@ -31,12 +40,16 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
     historical: ["历史", "先例", "演变"]
   };
 
+  // Negation indicators in falsifiable statements
+  const negationIndicators = ["不成立", "失效", "无法", "不能", "未能", "失败"];
+
+  const outputMap = new Map(outputs.map(o => [o.agentType, o]));
+
   for (let i = 0; i < outputs.length; i++) {
     for (let j = i + 1; j < outputs.length; j++) {
       const agentA = outputs[i];
       const agentB = outputs[j];
 
-      // Guard against undefined agents (shouldn't happen for well-formed inputs)
       if (!agentA || !agentB) continue;
 
       const keywordsA = conclusionKeywords[agentA.agentType] || [];
@@ -45,6 +58,41 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
       const falsifiableA = agentA.falsifiable ?? "";
       const falsifiableB = agentB.falsifiable ?? "";
 
+      // Check 1: Known incompatible pairs (both present in outputs)
+      const knownConflict = incompatiblePairs.find(([a, b]) =>
+        (agentA.agentType === a && agentB.agentType === b) ||
+        (agentA.agentType === b && agentB.agentType === a)
+      );
+
+      if (knownConflict) {
+        conflicts.push({
+          type: "logical",
+          involvedAgents: [agentA.agentType, agentB.agentType],
+          description: knownConflict[2],
+          severity: "medium",
+          resolutionStrategy: "需明确优先级并在两个目标间寻找帕累托最优解"
+        });
+        continue; // Skip keyword check for known pairs
+      }
+
+      // Check 2: Semantic negation - one agent's falsifiable negates another's conclusion keywords
+      const negatesB = negationIndicators.some(neg => falsifiableA.includes(neg)) &&
+        keywordsB.some(kw => falsifiableA.includes(kw));
+      const negatesA = negationIndicators.some(neg => falsifiableB.includes(neg)) &&
+        keywordsA.some(kw => falsifiableB.includes(kw));
+
+      if (negatesB || negatesA) {
+        conflicts.push({
+          type: "logical",
+          involvedAgents: [agentA.agentType, agentB.agentType],
+          description: `${agentA.agentType}的可证伪假设与${agentB.agentType}的核心结论存在语义矛盾`,
+          severity: "high",
+          resolutionStrategy: "需重新审视两个Agent的假设边界,明确适用条件"
+        });
+        continue;
+      }
+
+      // Check 3: Original keyword cross-reference (lower priority)
       const hasConflict = keywordsA.some(kw => 
         falsifiableB.toLowerCase().includes(kw.toLowerCase())
       ) || keywordsB.some(kw => 

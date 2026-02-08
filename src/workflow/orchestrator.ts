@@ -7,7 +7,7 @@ import type {
   AgentType,
   WorkflowConfig
 } from "../types";
-import { createAllAgents } from "../agents/agent-factory";
+import { createAllAgents, createAgent } from "../agents/agent-factory";
 import { executeAgent } from "../agents/agent-executor";
 import { detectConflicts } from "./conflict-resolver";
 import { resolveExecutionWaves, recordWaveStart, recordWaveEnd } from "./dependency-analyzer.js";
@@ -25,8 +25,8 @@ interface AgentCacheEntry {
 
 const agentCache = new Map<string, AgentCacheEntry>();
 
-function getCacheKey(agentType: AgentType, hypothesis: Hypothesis): string {
-  return `${agentType}:${JSON.stringify(hypothesis)}`;
+function getCacheKey(agentType: AgentType, hypothesis: Hypothesis, conflictCount: number): string {
+  return `${agentType}:${conflictCount}:${JSON.stringify(hypothesis)}`;
 }
 
 export async function runWorkflow(
@@ -61,7 +61,7 @@ export async function runWorkflow(
   // Clear cache for fresh workflow run
   agentCache.clear();
 
-  const agents = await createAllAgents();
+  const agents = await createAllAgents({ extended: options.extendedAgents });
 
   let previousOutputs: AgentOutput[] | null = null;
   let convergedAtIteration: number | undefined = undefined;
@@ -153,11 +153,7 @@ async function step2_ExecuteAgents(
   let completedAgents = 0;
 
   const executeAgentForType = async (agentType: AgentType): Promise<void> => {
-    if (state.agentResults.has(agentType) && state.iteration === 1) {
-      return;
-    }
-
-    const cacheKey = getCacheKey(agentType, hypothesis);
+    const cacheKey = getCacheKey(agentType, hypothesis, state.conflicts.length);
     const cached = agentCache.get(cacheKey);
 
     if (cached && state.iteration > 1) {
@@ -467,12 +463,7 @@ export async function queryAgent(
   hypothesis: Hypothesis,
   previousOutputs?: Map<AgentType, AgentOutput>
 ): Promise<AgentOutput> {
-  const agents = await createAllAgents();
-  const agent = agents.get(agentType);
-
-  if (!agent) {
-    throw new Error(`Agent not found: ${agentType}`);
-  }
+  const agent = await createAgent(agentType);
 
   return await executeAgent(agent, {
     hypothesis,
