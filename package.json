@@ -6,6 +6,9 @@
   "scripts": {
     "start": "bun run src/server.ts",
     "dev": "bun run src/server.ts",
+    "web": "bun run src/web-server.ts",
+    "web:dev": "concurrently \"bun run src/web-server.ts\" \"cd web && npx vite\"",
+    "web:build": "cd web && npx vite build",
     "test": "bun test src/__tests__/",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .js,.ts",
