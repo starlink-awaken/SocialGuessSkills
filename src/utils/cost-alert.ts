@@ -19,15 +19,20 @@ function readBudgetFromEnv(): number {
 
 export class CostAlert {
   private monthlyBudget: number;
-  private used: number; // 已用金额，美元
-  private warnThreshold: number; // 50%阈值
-  private errorThreshold: number; // 100%阈值
+  private used: number;
+  private warnThreshold: number;
+  private errorThreshold: number;
 
   constructor(monthlyBudget?: number) {
     this.monthlyBudget = clampBudget(monthlyBudget ?? readBudgetFromEnv());
     this.used = 0;
-    this.warnThreshold = this.monthlyBudget / 2; // 50%
-    this.errorThreshold = this.monthlyBudget; // 100%
+    this.warnThreshold = this.monthlyBudget / 2;
+    this.errorThreshold = this.monthlyBudget;
+  }
+
+  private _recalcThresholds() {
+    this.warnThreshold = this.monthlyBudget / 2;
+    this.errorThreshold = this.monthlyBudget;
   }
 
   // 获取当前状态
@@ -85,8 +90,7 @@ export class CostAlert {
   reset(monthlyBudget?: number) {
     if (monthlyBudget !== undefined) {
       this.monthlyBudget = clampBudget(monthlyBudget);
-      this.warnThreshold = this.monthlyBudget / 2;
-      this.errorThreshold = this.monthlyBudget;
+      this._recalcThresholds();
     }
     this.used = 0;
   }

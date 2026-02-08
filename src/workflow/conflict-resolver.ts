@@ -16,14 +16,19 @@ export function detectConflicts(outputs: AgentOutput[]): Conflict[] {
 function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
   const conflicts: Conflict[] = [];
 
-  const conclusionKeywords = {
+  const conclusionKeywords: Record<AgentType, string[]> = {
     systems: ["反馈", "回路", "稳定"],
     econ: ["激励", "产权", "效率"],
     socio: ["认同", "规范", "共同体"],
     governance: ["权力", "执行", "监督"],
     culture: ["仪式", "符号", "认同"],
     risk: ["崩溃", "储备", "缓冲"],
-    validation: ["可证伪", "反例", "验证"]
+    validation: ["可证伪", "反例", "验证"],
+    environmental: ["生态", "环境", "可持续"],
+    demographic: ["人口", "迁移", "老龄化"],
+    infrastructure: ["基础设施", "网络", "承载力"],
+    technology: ["技术", "创新", "自动化"],
+    historical: ["历史", "先例", "演变"]
   };
 
   for (let i = 0; i < outputs.length; i++) {
@@ -34,8 +39,8 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
       // Guard against undefined agents (shouldn't happen for well-formed inputs)
       if (!agentA || !agentB) continue;
 
-      const keywordsA = conclusionKeywords[agentA.agentType as keyof typeof conclusionKeywords] || [];
-      const keywordsB = conclusionKeywords[agentB.agentType as keyof typeof conclusionKeywords] || [];
+      const keywordsA = conclusionKeywords[agentA.agentType] || [];
+      const keywordsB = conclusionKeywords[agentB.agentType] || [];
 
       const falsifiableA = agentA.falsifiable ?? "";
       const falsifiableB = agentB.falsifiable ?? "";
@@ -188,14 +193,19 @@ function detectRiskAmplification(outputs: AgentOutput[]): Conflict[] {
 
 function detectGoalConflicts(outputs: AgentOutput[]): Conflict[] {
   const conflicts: Conflict[] = [];
-  const goalKeywords = {
+  const goalKeywords: Record<AgentType, string[]> = {
     systems: ["效率", "优化", "改进"],
     econ: ["利润", "最大化", "增长"],
     socio: ["公平", "平等", "分配"],
     governance: ["控制", "监管", "稳定"],
     culture: ["传统", "保护", "延续"],
     risk: ["稳健", "安全", "防护"],
-    validation: ["验证", "测试", "评估"]
+    validation: ["验证", "测试", "评估"],
+    environmental: ["可持续", "碳中和", "生态平衡"],
+    demographic: ["均衡", "适龄", "人口红利"],
+    infrastructure: ["互联互通", "冗余", "升级"],
+    technology: ["数字化", "智能化", "颠覆"],
+    historical: ["延续", "复兴", "借鉴"]
   };
 
   for (let i = 0; i < outputs.length; i++) {
@@ -206,8 +216,8 @@ function detectGoalConflicts(outputs: AgentOutput[]): Conflict[] {
       if (!agentA || !agentB) continue;
 
       // Check if one agent prioritizes efficiency while another prioritizes stability
-      const agentAType = agentA.agentType as keyof typeof goalKeywords;
-      const agentBType = agentB.agentType as keyof typeof goalKeywords;
+      const agentAType = agentA.agentType;
+      const agentBType = agentB.agentType;
       const keywordsA = goalKeywords[agentAType] || [];
       const keywordsB = goalKeywords[agentBType] || [];
 
@@ -242,14 +252,19 @@ function detectGoalConflicts(outputs: AgentOutput[]): Conflict[] {
 
 function detectConstraintConflicts(outputs: AgentOutput[]): Conflict[] {
   const conflicts: Conflict[] = [];
-  const constraintKeywords = {
+  const constraintKeywords: Record<AgentType, string[]> = {
     systems: ["必须", "应当", "强制"],
     econ: ["成本", "预算", "资源限制"],
     socio: ["参与", "共识", "民主"],
     governance: ["法规", "合规", "审批"],
     culture: ["习俗", "禁忌", "规范"],
     risk: ["风险阈值", "安全标准", "底线"],
-    validation: ["测试条件", "验证标准", "证据要求"]
+    validation: ["测试条件", "验证标准", "证据要求"],
+    environmental: ["排放上限", "生态红线", "环评"],
+    demographic: ["人口容量", "承载极限", "迁移配额"],
+    infrastructure: ["承载上限", "维护周期", "冗余要求"],
+    technology: ["技术成熟度", "兼容性", "安全审计"],
+    historical: ["历史教训", "制度惯性", "路径依赖"]
   };
 
   for (let i = 0; i < outputs.length; i++) {
@@ -259,8 +274,8 @@ function detectConstraintConflicts(outputs: AgentOutput[]): Conflict[] {
 
       if (!agentA || !agentB) continue;
 
-      const agentAType = agentA.agentType as keyof typeof constraintKeywords;
-      const agentBType = agentB.agentType as keyof typeof constraintKeywords;
+      const agentAType = agentA.agentType;
+      const agentBType = agentB.agentType;
       const keywordsA = constraintKeywords[agentAType] || [];
       const keywordsB = constraintKeywords[agentBType] || [];
 

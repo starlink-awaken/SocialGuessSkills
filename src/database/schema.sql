@@ -2,7 +2,7 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS hypotheses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  hash TEXT NOT NULL,
+  hash TEXT NOT NULL UNIQUE,
   content TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );

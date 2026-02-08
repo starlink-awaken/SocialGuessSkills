@@ -2,7 +2,6 @@ import type { AgentInstance, AgentOutput, AnalysisContext } from "../types";
 import { callLLM } from "../utils/llm-client.js";
 
 const MOCK_MODE_VALUES = new Set(["1", "true", "yes", "on"]);
-let forceMock = false;
 
 const SECTION_LABELS = {
   "结论": "conclusion",
@@ -63,9 +62,6 @@ export async function executeAgent(
 }
 
 function shouldUseMock(): boolean {
-  if (forceMock) {
-    return true;
-  }
   const raw = (process.env.AGENT_MOCK_MODE ?? "").toLowerCase();
   if (MOCK_MODE_VALUES.has(raw)) {
     return true;
@@ -175,7 +171,6 @@ async function simulateAICall(
       return parseAgentOutput(agentType, response);
     } catch (error) {
       console.warn(`LLM API call failed for ${agentType}, falling back to mock:`, error);
-      forceMock = true;
     }
   }
 

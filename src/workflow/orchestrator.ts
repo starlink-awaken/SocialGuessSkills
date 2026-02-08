@@ -58,6 +58,9 @@ export async function runWorkflow(
     failures: []
   };
 
+  // Clear cache for fresh workflow run
+  agentCache.clear();
+
   const agents = await createAllAgents();
 
   let previousOutputs: AgentOutput[] | null = null;
@@ -396,6 +399,7 @@ function compareOutputs(
   const currentByType = new Map(currentOutputs.map(output => [output.agentType, output]));
   const agentTypes = allAgentTypes ?? Array.from(new Set([...previousByType.keys(), ...currentByType.keys()]));
   let similaritySum = 0;
+  let matchedCount = 0;
 
   for (const agentType of agentTypes) {
     const previous = previousByType.get(agentType);
@@ -409,9 +413,10 @@ function compareOutputs(
       mergeConvergenceSignal(current)
     );
     similaritySum += similarity;
+    matchedCount += 1;
   }
 
-  return similaritySum / agentTypes.length;
+  return matchedCount === 0 ? 0 : similaritySum / matchedCount;
 }
 
 function mergeConvergenceSignal(output: AgentOutput): string {
