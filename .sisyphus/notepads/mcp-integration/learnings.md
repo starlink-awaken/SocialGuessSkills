@@ -335,3 +335,9 @@ gh repo create SocialGuessSkills --public --source=. \
 3. 开始使用社会推理系统
 
 需要任何帮助请告知！
+
+## [2026-02-07] MCP新增成本报告工具
+
+- 在 `src/server.ts` 新增 `get_glm_cost_report` MCP tool。
+- 统一导入 `GLMCostTracker` 与 `BudgetMonitor`，按 period(today/week/month) 输出 JSON 成本报告。
+- 报告调用 `getDailyReport/getWeeklyReport/getMonthlyReport`，返回时间区间、token、成本与月度状态。

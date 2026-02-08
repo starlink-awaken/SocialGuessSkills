@@ -57,11 +57,14 @@ export interface ExecutionPlan {
 }
 
 /**
- * 基础 Agent 依赖规则(7 Agent 系统)
- * 
+ * 基础 Agent 依赖规则(12 Agent 系统)
+ *
  * Wave 1: systems, econ, socio (无依赖,可并行)
  * Wave 2: governance, culture, risk (依赖 Wave 1)
- * Wave 3: validation (依赖 Wave 1+2)
+ * Wave 3: 空 (12 Agent模式中的gap)
+ * Wave 4: environmental, demographic, infrastructure (依赖 Wave 1-2)
+ * Wave 5: technology, historical (依赖 Wave 4)
+ * Wave 6: validation (依赖 Wave 1-5)
  */
 const BASE_AGENT_DEPENDENCIES: Partial<Record<AgentType, AgentDependency>> = {
   systems: { agent: "systems", dependsOn: [], wave: 1 },
@@ -70,16 +73,22 @@ const BASE_AGENT_DEPENDENCIES: Partial<Record<AgentType, AgentDependency>> = {
   governance: { agent: "governance", dependsOn: ["systems", "econ", "socio"], wave: 2 },
   culture: { agent: "culture", dependsOn: ["systems", "econ", "socio"], wave: 2 },
   risk: { agent: "risk", dependsOn: ["systems", "econ", "socio"], wave: 2 },
-  validation: { agent: "validation", dependsOn: ["systems", "econ", "socio", "governance", "culture", "risk"], wave: 3 }
+  environmental: { agent: "environmental", dependsOn: ["systems", "econ", "socio", "governance"], wave: 4 },
+  demographic: { agent: "demographic", dependsOn: ["systems", "econ", "socio", "culture"], wave: 4 },
+  infrastructure: { agent: "infrastructure", dependsOn: ["systems", "econ", "socio"], wave: 4 },
+  technology: { agent: "technology", dependsOn: ["systems", "econ", "socio"], wave: 5 },
+  historical: { agent: "historical", dependsOn: ["systems", "econ", "socio"], wave: 5 },
+  validation: { agent: "validation", dependsOn: ["systems", "econ", "socio", "governance", "culture", "risk", "environmental", "demographic", "infrastructure", "technology", "historical"], wave: 6 }
 };
 
 /**
  * 构建 Agent 依赖图
- * 
+ *
  * @param agents - 需要执行的 Agent 列表
+ * @param useExtended - 是否使用12 Agent模式（默认7 Agent模式）
  * @returns 完整的依赖图
  */
-export function buildDependencyGraph(agents: AgentType[]): Map<AgentType, AgentDependency> {
+export function buildDependencyGraph(agents: AgentType[], useExtended: boolean = false): Map<AgentType, AgentDependency> {
   const dependencies = new Map<AgentType, AgentDependency>();
   const agentSet = new Set(agents);
 
@@ -92,10 +101,24 @@ export function buildDependencyGraph(agents: AgentType[]): Map<AgentType, AgentD
     // 过滤依赖,只包含在当前执行计划中的 Agent
     const filteredDependsOn = dependency.dependsOn.filter(dep => agentSet.has(dep));
 
+    // 根据模式重新编号wave
+    let wave = dependency.wave;
+    if (useExtended) {
+      // 12 Agent模式: 直接使用BASE_AGENT_DEPENDENCIES中的wave编号(1-6)
+      wave = wave;
+    } else {
+      // 7 Agent模式: 重新映射wave 1,2,4,5,6 -> 1,2,3 (只有base agents: wave 1,2,6)
+      if (wave === 1 || wave === 2) {
+        wave = wave;
+      } else if (wave === 4 || wave === 5 || wave === 6) {
+        wave = 3;
+      }
+    }
+
     dependencies.set(agent, {
       agent,
       dependsOn: filteredDependsOn,
-      wave: dependency.wave
+      wave
     });
   }
 
@@ -104,19 +127,20 @@ export function buildDependencyGraph(agents: AgentType[]): Map<AgentType, AgentD
 
 /**
  * 解析执行波次
- * 
+ *
  * 根据 Agent 依赖关系,将 Agent 分组为多个 Wave
  * 同一波次的 Agent 可以并行执行,不同 Wave 顺序执行
- * 
+ *
  * @param agents - 需要执行的 Agent 列表
+ * @param useExtended - 是否使用12 Agent模式（默认7 Agent模式）
  * @returns 执行计划(包含 Waves 和依赖图)
  */
-export function resolveExecutionWaves(agents: AgentType[]): ExecutionPlan {
-  const dependencies = buildDependencyGraph(agents);
-  
+export function resolveExecutionWaves(agents: AgentType[], useExtended: boolean = false): ExecutionPlan {
+  const dependencies = buildDependencyGraph(agents, useExtended);
+
   // 按 Wave 分组
   const waveGroups = new Map<number, AgentType[]>();
-  
+
   for (const [agentType, dependency] of dependencies) {
     const wave = dependency.wave;
     if (!waveGroups.has(wave)) {
@@ -125,22 +149,42 @@ export function resolveExecutionWaves(agents: AgentType[]): ExecutionPlan {
     waveGroups.get(wave)!.push(agentType);
   }
 
-  // 生成 Wave 列表(按 Wave 编号排序)
+  // 12 Agent模式: 需要保留空Wave 3，所以不能重新编号
   const waves: WaveExecutionMetrics[] = [];
-  const maxWave = Math.max(...waveGroups.keys());
-  
-  for (let waveNum = 1; waveNum <= maxWave; waveNum++) {
-    const waveAgents = waveGroups.get(waveNum) || [];
-    
-    // 判断是否并行(一个 Wave 有 2+ 个 Agent)
-    const parallel = waveAgents.length > 1;
-    
-    waves.push({
-      wave: waveNum,
-      agents: waveAgents,
-      startTime: 0, // 执行时设置
-      parallel
-    });
+
+  if (useExtended) {
+    // 12 Agent模式: 直接按wave编号1-6生成，Wave 3为空
+    for (let waveNum = 1; waveNum <= 6; waveNum++) {
+      const waveAgents = waveGroups.get(waveNum) || [];
+
+      const parallel = waveAgents.length > 1;
+
+      waves.push({
+        wave: waveNum,
+        agents: waveAgents,
+        startTime: 0,
+        parallel
+      });
+    }
+  } else {
+    // 7 Agent模式: 重新编号为连续的 1, 2, 3...
+    const sortedWaveNumbers = Array.from(waveGroups.keys()).sort((a, b) => a - b);
+    let newWaveNum = 1;
+
+    for (const originalWaveNum of sortedWaveNumbers) {
+      const waveAgents = waveGroups.get(originalWaveNum)!;
+
+      const parallel = waveAgents.length > 1;
+
+      waves.push({
+        wave: newWaveNum,
+        agents: waveAgents,
+        startTime: 0,
+        parallel
+      });
+
+      newWaveNum++;
+    }
   }
 
   return {

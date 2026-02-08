@@ -164,3 +164,34 @@ Added 4 new comprehensive test cases in `src/__tests__/orchestrator.test.ts`:
 - `maxIterations`: Default 3, configurable via `WorkflowConfig`
 - `convergenceThreshold`: Default 0.9 (90% similarity), configurable via `WorkflowConfig`
 - Both are validated: `maxIterations` must be positive integer, `convergenceThreshold` clamped to [0, 1]
+
+## Task: Monitoring Compose Stack (Completed 2026-02-07)
+
+### Summary
+- Created `docker-compose.monitoring.yml` with Prometheus + Grafana
+- Prometheus mounts `./docker/prometheus` -> `/etc/prometheus`
+- Grafana mounts `./docker/grafana` -> `/var/lib/grafana`
+- Both services attached to `monitoring` network and exposed on 9090/3000
+
+### Verification
+- ✅ LSP diagnostics clean for `docker-compose.monitoring.yml`
+
+## Task: GLM-4 成本追踪器 (Completed 2026-02-07)
+
+### Summary
+- 新增 `src/utils/glm-cost-tracker.ts`，按月累计 token 与成本（GLM-4 价格 $0.014 / 1K tokens）
+- 采用 `Map<YYYY-MM, { tokens, costUsd }>` 的内存存储模式（与 token-counter 一致）
+- 参考 cost-alert 阈值模式：50% warn / 100% error，超预算拒绝新增请求并记录日志
+
+### Verification
+- ✅ LSP diagnostics clean for `src/utils/glm-cost-tracker.ts`
+
+## Task: 预算监控报告 (Completed 2026-02-07)
+
+### Summary
+- 新增 `src/utils/budget-monitor.ts`，基于 `GLMCostTracker` 记录成本并生成日报/周报/月报
+- 内存记录 `GLMCostRecord`，按日期范围汇总 token 与 costUsd
+- 报告包含 `monthlyState` 以对齐月预算阈值状态
+
+### Verification
+- ✅ LSP diagnostics clean for `src/utils/budget-monitor.ts`

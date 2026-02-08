@@ -12,7 +12,7 @@ test("工作流编排器 - 完整6步推演", async () => {
   const model = await runWorkflow(hypothesis, { maxIterations: 1 });
 
   expect(model).toBeDefined();
-  expect(model.agentOutputs).toHaveLength(7);
+  expect(model.agentOutputs).toHaveLength(12);
   expect(model.conflicts).toBeDefined();
   expect(model.structure).toBeDefined();
   expect(model.metadata.iterations).toBe(1);

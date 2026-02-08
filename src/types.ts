@@ -1,4 +1,4 @@
-export type AgentType = 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation';
+export type AgentType = 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation' | 'environmental' | 'demographic' | 'infrastructure' | 'technology' | 'historical';
 
 export interface Hypothesis {
   assumptions: string[];
