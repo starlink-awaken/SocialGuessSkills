@@ -220,7 +220,8 @@ const getModelByIdConfig: any = {
           iterations: (model.metadata as any).iterations || 3,
           conflicts: (model.metadata as any).conflicts || 0
         }))
-    }, null, 2)
+      }, null, 2)
+    }]
   };
 });
 

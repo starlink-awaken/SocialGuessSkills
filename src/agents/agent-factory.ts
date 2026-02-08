@@ -1,9 +1,13 @@
 import type { AgentType, AgentInstance } from "../types";
 import { readFileSync } from "fs";
-import { PROMPTS_DIR } from "../utils/constants";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export async function loadPrompt(agentType: AgentType): Promise<string> {
-  const promptPath = `${PROMPTS_DIR}/${agentType}-agent.md`;
+  const promptPath = join(__dirname, 'prompts', `${agentType}-agent.md`);
   const content = readFileSync(promptPath, "utf-8");
 
   if (!content) {
