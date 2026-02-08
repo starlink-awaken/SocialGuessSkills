@@ -1,4 +1,4 @@
-import type { AgentMeta, Hypothesis, HistoryItem, SocialSystemModel, SSEEvent } from '../types';
+import type { AgentMeta, Hypothesis, HistorySummary, HistoryDetail, SocialSystemModel, SSEEvent } from '../types';
 
 const API_BASE = '/api';
 
@@ -8,13 +8,13 @@ export async function fetchAgents(): Promise<AgentMeta[]> {
   return res.json();
 }
 
-export async function fetchHistory(): Promise<HistoryItem[]> {
+export async function fetchHistory(): Promise<HistorySummary[]> {
   const res = await fetch(`${API_BASE}/history`);
   if (!res.ok) throw new Error('Failed to fetch history');
   return res.json();
 }
 
-export async function fetchModel(id: number): Promise<HistoryItem> {
+export async function fetchModel(id: number): Promise<HistoryDetail> {
   const res = await fetch(`${API_BASE}/model/${id}`);
   if (!res.ok) throw new Error('Failed to fetch model');
   return res.json();

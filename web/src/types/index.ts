@@ -100,9 +100,23 @@ export interface WorkflowProgress {
   error?: string;
 }
 
-export interface HistoryItem {
+export interface HistorySummary {
   id: number;
   hypothesisId: number;
+  hash: string;
+  createdAt: string;
+  summary: {
+    iterations: number;
+    confidence: number;
+    agentCount: number;
+    conflictCount: number;
+  };
+}
+
+export interface HistoryDetail {
+  id: number;
+  hypothesisId: number;
+  hash: string;
   createdAt: string;
   model: SocialSystemModel;
 }
