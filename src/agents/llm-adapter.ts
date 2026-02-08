@@ -317,6 +317,46 @@ function getMockAgentOutput(agentType: AgentType): AgentOutput {
         "选取3个历史案例:成功案例、失败案例、部分成功"
       ],
       falsifiable: "若在模型实施6个月后,所有可证伪假设均无法被检验,则验证框架失效"
+    },
+    environmental: {
+      agentType: "environmental",
+      conclusion: "需建立资源承载力评估机制,确保社区发展不超过环境阈值",
+      evidence: ["资源有限条件下,环境承载力是硬约束", "超过承载力阈值会导致不可逆退化"],
+      risks: ["环境退化是渐进的,早期不易察觉", "极端气候事件可能突破预设安全边际"],
+      suggestions: ["定期评估资源消耗速率", "设定资源使用红线并建立预警机制"],
+      falsifiable: "若在持续监测6个月后,资源消耗率超过再生率150%而系统仍稳定,则承载力假设不成立"
+    },
+    demographic: {
+      agentType: "demographic",
+      conclusion: "需关注人口结构变化对劳动力供给和社会稳定的影响",
+      evidence: ["人口结构决定劳动力供给和抚养比", "代际差异影响价值观和治理偏好"],
+      risks: ["劳动力不足时公共服务质量下降", "代际冲突可能削弱社区凝聚力"],
+      suggestions: ["建立人口动态监测", "设计跨代际合作机制"],
+      falsifiable: "若劳动力比率低于40%时社区仍能自给自足,则人口结构假设不成立"
+    },
+    infrastructure: {
+      agentType: "infrastructure",
+      conclusion: "基础设施的韧性决定社区应对冲击的能力",
+      evidence: ["关键基础设施的冗余度直接影响系统韧性", "网络效应使基础设施投资具有乘数效应"],
+      risks: ["基础设施退化是隐性风险", "单点故障可能导致级联失效"],
+      suggestions: ["建立关键设施冗余备份", "定期维护并评估设施状态"],
+      falsifiable: "若关键设施无冗余时系统仍能承受2次以上冲击,则韧性假设不成立"
+    },
+    technology: {
+      agentType: "technology",
+      conclusion: "技术选择应优先考虑可维护性和对劳动力结构的影响",
+      evidence: ["技术进步改变劳动力需求结构", "过度依赖高技术会增加脆弱性"],
+      risks: ["技术断裂时社区可能丧失关键能力", "自动化可能加剧不平等"],
+      suggestions: ["优先发展低维护成本的适用技术", "建立技术知识传承体系"],
+      falsifiable: "若引入自动化后失业率超过30%而社区仍稳定,则技术影响假设不成立"
+    },
+    historical: {
+      agentType: "historical",
+      conclusion: "历史路径依赖和制度惯性是社区治理的重要约束",
+      evidence: ["制度变迁具有路径依赖性", "历史经验塑造集体记忆和行为模式"],
+      risks: ["路径锁定可能阻碍必要的制度创新", "历史创伤可能被利用来制造分裂"],
+      suggestions: ["研究类似规模社区的历史案例", "在制度设计中预留变革通道"],
+      falsifiable: "若完全忽略历史经验的新制度在6个月内运转良好,则路径依赖假设不成立"
     }
   };
 

@@ -196,33 +196,13 @@ const getModelByIdConfig: any = {
   }
 };
 
-  (mcpServer as any).registerTool("query_model_history", queryModelHistoryConfig, async (args: QueryModelHistoryArgs, _extra?: any): Promise<any> => {
+(mcpServer as any).registerTool("get_model_by_id", getModelByIdConfig, async (args: GetModelByIdArgs, _extra?: any): Promise<any> => {
   const modelRepo = new ModelRepository();
-  let records: SocialSystemModel[] = [];
-
-  if (typeof args.hypothesisId === "number") {
-    records = modelRepo.findByHypothesisId(args.hypothesisId);
-  } else if (args.minConfidence !== undefined && args.maxConfidence !== undefined) {
-    records = modelRepo.findByConfidenceRange(args.minConfidence, args.maxConfidence);
-  } else {
-    records = modelRepo.findAll(args.limit || 10);
+  const record = modelRepo.findById(args.id);
+  if (!record) {
+    return { content: [{ type: "text" as const, text: JSON.stringify({ error: `未找到ID为 ${args.id} 的模型` }) }], isError: true } as any;
   }
-
-  return {
-    content: [{
-      type: "text" as const,
-      text: JSON.stringify({
-        total: records.length,
-        models: records.map(model => ({
-          id: (model.metadata as any).modelId || `model-${Date.now()}`,
-          hypothesisId: (model.metadata as any).hypothesisId || "",
-          confidence: (model.metadata as any).confidence || 0,
-          iterations: (model.metadata as any).iterations || 3,
-          conflicts: (model.metadata as any).conflicts || 0
-        }))
-      }, null, 2)
-    }]
-  };
+  return { content: [{ type: "text" as const, text: record.modelJson }] } as any;
 });
 
 // Health check tool

@@ -45,7 +45,7 @@ export class HypothesisRepository {
 
     const payload = JSON.stringify(normalizeHypothesis(hypothesis));
     const insert = db.query("INSERT INTO hypotheses (hash, content) VALUES ($hash, $content)");
-    const result = insert.run({ hash, content: payload });
+    const result = insert.run({ $hash: hash, $content: payload });
     const id = Number(result.lastInsertRowid);
     const record = this.findById(id);
     if (!record) {
@@ -57,19 +57,19 @@ export class HypothesisRepository {
 
   findById(id: number): HypothesisRecord | null {
     const query = db.query("SELECT id, hash, content, created_at FROM hypotheses WHERE id = $id");
-    const row = query.get({ id }) as Record<string, unknown> | null;
+    const row = query.get({ $id: id }) as Record<string, unknown> | null;
     return row ? toRecord(row) : null;
   }
 
   findByHash(hash: string): HypothesisRecord | null {
     const query = db.query("SELECT id, hash, content, created_at FROM hypotheses WHERE hash = $hash");
-    const row = query.get({ hash }) as Record<string, unknown> | null;
+    const row = query.get({ $hash: hash }) as Record<string, unknown> | null;
     return row ? toRecord(row) : null;
   }
 
   delete(id: number): boolean {
     const statement = db.query("DELETE FROM hypotheses WHERE id = $id");
-    const result = statement.run({ id });
+    const result = statement.run({ $id: id });
     return result.changes > 0;
   }
 }

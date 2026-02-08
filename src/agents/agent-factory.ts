@@ -27,7 +27,12 @@ export async function createAgent(agentType: AgentType): Promise<AgentInstance> 
     governance: "Governance Agent",
     culture: "Culture Agent",
     risk: "Risk Agent",
-    validation: "Validation Agent"
+    validation: "Validation Agent",
+    environmental: "Environmental Agent",
+    demographic: "Demographic Agent",
+    infrastructure: "Infrastructure Agent",
+    technology: "Technology Agent",
+    historical: "Historical Agent"
   };
 
   return {

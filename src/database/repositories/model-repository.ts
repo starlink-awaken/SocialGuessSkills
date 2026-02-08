@@ -29,7 +29,7 @@ export class ModelRepository {
     const insert = db.query(
       "INSERT INTO models (hypothesis_id, hash, model_json) VALUES ($hypothesisId, $hash, $modelJson)",
     );
-    const result = insert.run({ hypothesisId, hash, modelJson: payload });
+    const result = insert.run({ $hypothesisId: hypothesisId, $hash: hash, $modelJson: payload });
     const id = Number(result.lastInsertRowid);
     const record = this.findById(id);
     if (!record) {
@@ -43,15 +43,23 @@ export class ModelRepository {
     const query = db.query(
       "SELECT id, hypothesis_id, hash, model_json, created_at FROM models WHERE id = $id",
     );
-    const row = query.get({ id }) as Record<string, unknown> | null;
+    const row = query.get({ $id: id }) as Record<string, unknown> | null;
     return row ? toRecord(row) : null;
+  }
+
+  findAll(limit = 10): ModelRecord[] {
+    const query = db.query(
+      "SELECT id, hypothesis_id, hash, model_json, created_at FROM models ORDER BY created_at DESC LIMIT $limit",
+    );
+    const rows = query.all({ $limit: limit }) as Record<string, unknown>[];
+    return rows.map((row) => toRecord(row));
   }
 
   findByHypothesisId(hypothesisId: number): ModelRecord[] {
     const query = db.query(
       "SELECT id, hypothesis_id, hash, model_json, created_at FROM models WHERE hypothesis_id = $hypothesisId ORDER BY created_at DESC",
     );
-    const rows = query.all({ hypothesisId }) as Record<string, unknown>[];
+    const rows = query.all({ $hypothesisId: hypothesisId }) as Record<string, unknown>[];
     return rows.map((row) => toRecord(row));
   }
 
@@ -59,13 +67,13 @@ export class ModelRepository {
     const query = db.query(
       "SELECT id, hypothesis_id, hash, model_json, created_at FROM models WHERE CAST(json_extract(model_json, '$.metadata.confidence') AS REAL) BETWEEN $minConfidence AND $maxConfidence ORDER BY created_at DESC",
     );
-    const rows = query.all({ minConfidence, maxConfidence }) as Record<string, unknown>[];
+    const rows = query.all({ $minConfidence: minConfidence, $maxConfidence: maxConfidence }) as Record<string, unknown>[];
     return rows.map((row) => toRecord(row));
   }
 
   delete(id: number): boolean {
     const statement = db.query("DELETE FROM models WHERE id = $id");
-    const result = statement.run({ id });
+    const result = statement.run({ $id: id });
     return result.changes > 0;
   }
 }

@@ -108,7 +108,7 @@ export function compareModels(models: SocialSystemModel[]): BatchComparisonResul
   const ranking: ModelRanking[] = [];
 
   models.forEach((model, index) => {
-    const score = zConfidence[index] - zIterations[index] - zConflicts[index];
+    const score = (zConfidence[index] ?? 0) - (zIterations[index] ?? 0) - (zConflicts[index] ?? 0);
 
     ranking.push({
       modelId: getModelId(model, index),

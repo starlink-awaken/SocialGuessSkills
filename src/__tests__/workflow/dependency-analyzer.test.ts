@@ -103,17 +103,17 @@ test("resolveExecutionWaves: 7 Agent 模式生成 3 波", () => {
 
   // Wave 1: 3 个 Agent 并行
   expect(plan.waves[0]?.wave).toBe(1);
-  expect(plan.waves[0]?.agents?.sort()).toEqual(["econ", "socio", "systems"]);
+  expect(plan.waves[0]?.agents?.sort()).toEqual((["econ", "socio", "systems"] as AgentType[]));
   expect(plan.waves[0]?.parallel).toBe(true);
 
   // Wave 2: 3 个 Agent 并行
   expect(plan.waves[1]?.wave).toBe(2);
-  expect(plan.waves[1]?.agents?.sort()).toEqual(["culture", "governance", "risk"]);
+  expect(plan.waves[1]?.agents?.sort()).toEqual((["culture", "governance", "risk"] as AgentType[]));
   expect(plan.waves[1]?.parallel).toBe(true);
 
   // Wave 3: 1 个 Agent 顺序
   expect(plan.waves[2]?.wave).toBe(3);
-  expect(plan.waves[2]?.agents).toEqual(["validation"]);
+  expect(plan.waves[2]?.agents).toEqual((["validation"] as AgentType[]));
   expect(plan.waves[2]?.parallel).toBe(false);
 });
 
@@ -125,12 +125,12 @@ test("resolveExecutionWaves: 12 Agent 模式生成 6 波", () => {
 
   // Wave 1: 3 个 Agent 并行
   expect(plan.waves[0]?.wave).toBe(1);
-  expect(plan.waves[0]?.agents?.sort()).toEqual(["econ", "socio", "systems"]);
+  expect(plan.waves[0]?.agents?.sort()).toEqual((["econ", "socio", "systems"] as AgentType[]));
   expect(plan.waves[0]?.parallel).toBe(true);
 
   // Wave 2: 3 个 Agent 并行
   expect(plan.waves[1]?.wave).toBe(2);
-  expect(plan.waves[1]?.agents?.sort()).toEqual(["culture", "governance", "risk"]);
+  expect(plan.waves[1]?.agents?.sort()).toEqual((["culture", "governance", "risk"] as AgentType[]));
   expect(plan.waves[1]?.parallel).toBe(true);
 
   // Wave 3: 空（12 Agent 模式中 Wave 3 无 Agent）
@@ -139,20 +139,20 @@ test("resolveExecutionWaves: 12 Agent 模式生成 6 波", () => {
 
   // Wave 4: 3 个 Agent 并行
   expect(plan.waves[3]?.wave).toBe(4);
-  expect(plan.waves[3]?.agents?.sort()).toEqual([
+  expect(plan.waves[3]?.agents?.sort()).toEqual(([
     "demographic",
     "environmental",
     "infrastructure"
-  ]);
+  ] as AgentType[]));
 
   // Wave 5: 2 个 Agent 并行
   expect(plan.waves[4]?.wave).toBe(5);
-  expect(plan.waves[4]?.agents?.sort()).toEqual(["historical", "technology"]);
+  expect(plan.waves[4]?.agents?.sort()).toEqual((["historical", "technology"] as AgentType[]));
   expect(plan.waves[4]?.parallel).toBe(true);
 
   // Wave 6: 1 个 Agent 顺序
   expect(plan.waves[5]?.wave).toBe(6);
-  expect(plan.waves[5]?.agents).toEqual(["validation"]);
+  expect(plan.waves[5]?.agents).toEqual((["validation"] as AgentType[]));
   expect(plan.waves[5]?.parallel).toBe(false);
 });
 

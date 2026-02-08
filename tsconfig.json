@@ -19,5 +19,12 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
     "types": ["bun", "node"]
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "web",
+    "src/server-clean.ts",
+    "src/middleware"
+  ]
 }

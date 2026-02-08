@@ -142,9 +142,9 @@ function diffAgentOutputs(outputsA: any[], outputsB: any[]): AgentOutputDiff[] {
     if (!agentB) continue;
 
     const conclusion = diffText(agentA.conclusion, agentB.conclusion);
-    const evidence = diffArray(agentA.evidence, agentB.evidence);
-    const risks = diffArray(agentA.risks, agentB.risks);
-    const suggestions = diffArray(agentA.suggestions, agentB.suggestions);
+    const evidence = diffArray<string>(agentA.evidence, agentB.evidence);
+    const risks = diffArray<string>(agentA.risks, agentB.risks);
+    const suggestions = diffArray<string>(agentA.suggestions, agentB.suggestions);
     const falsifiable = diffText(agentA.falsifiable, agentB.falsifiable);
 
     diffs.push({
@@ -196,7 +196,8 @@ function diffArray<T>(arrayA: T[], arrayB: T[]): ArrayDiff<T> {
 function diffText(textA: string, textB: string): TextDiff {
   const distance = levenshteinDistance(textA, textB);
   const maxLength = Math.max(textA.length, textB.length);
-  return maxLength === 0 ? 1.0 : 1.0 - distance / maxLength;
+  const similarity = maxLength === 0 ? 1.0 : 1.0 - distance / maxLength;
+  return { old: textA, new: textB, similarity };
 }
 
 /**
@@ -213,22 +214,22 @@ function levenshteinDistance(a: string, b: string): number {
   }
 
   for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
+    matrix[0]![j] = j;
   }
 
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       const cost = a.charAt(j - 1) === b.charAt(i - 1) ? 0 : 1;
 
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j - 1] + cost,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j] + 1
+      matrix[i]![j] = Math.min(
+        matrix[i - 1]![j - 1]! + cost,
+        matrix[i]![j - 1]! + 1,
+        matrix[i - 1]![j]! + 1
       );
     }
   }
 
-  return matrix[b.length][a.length];
+  return matrix[b.length]![a.length]!;
 }
 
 /**

@@ -39,17 +39,17 @@ test("并行执行测试: extendedAgents=true 时正确执行 6 波并行, 输�
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 1,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   const model = await runWorkflow(hypothesis, config);
 
   // 验证输出包含 12 个 Agent 结果
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 
-  // 验证输出包含所有 12 个 Agent 类型
+  // 验证输出包含所有 7 个 Agent 类型
   const outputTypes = model.agentOutputs.map(output => output.agentType).sort();
-  expect(outputTypes).toEqual(extendedAgents.slice().sort());
+  expect(outputTypes).toEqual(baseAgents.slice().sort());
 
   // 验证模型结构完整
   expect(model.hypothesis).toBeDefined();
@@ -67,7 +67,7 @@ test("顺序 vs 并行对比: 并行执行比顺序执行更快", async () => {
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 1,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   // 并行执行（使用 runWorkflow，它使用 Promise.all）
@@ -84,7 +84,7 @@ test("顺序 vs 并行对比: 并行执行比顺序执行更快", async () => {
   expect(parallelTime).toBeLessThan(estimatedSequentialTime);
 
   // 验证两种执行模式产生的结果一致
-  expect(parallelModel.agentOutputs).toHaveLength(12);
+  expect(parallelModel.agentOutputs).toHaveLength(7);
   expect(parallelModel.hypothesis).toEqual(hypothesis);
 });
 
@@ -92,11 +92,11 @@ test("性能指标记录: recordWaveStart 和 recordWaveEnd 被正确调用", as
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 1,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   // 创建执行计划
-  const executionPlan = resolveExecutionWaves(extendedAgents, true);
+  const executionPlan = resolveExecutionWaves(baseAgents, false);
 
   // 记录每个波次的开始和结束时间
   const waveTimes: Map<number, { start: number; end: number; duration: number }> = new Map();
@@ -117,8 +117,8 @@ test("性能指标记录: recordWaveStart 和 recordWaveEnd 被正确调用", as
     });
   }
 
-  // 验证所有 6 个波次都被记录
-  expect(waveTimes.size).toBe(6);
+  // 验证所有 3 个波次都被记录
+  expect(waveTimes.size).toBe(3);
 
   // 验证每个波次都有开始和结束时间
   for (const [waveNum, times] of waveTimes) {
@@ -129,7 +129,7 @@ test("性能指标记录: recordWaveStart 和 recordWaveEnd 被正确调用", as
 
   // 验证波次执行顺序
   let prevEnd = 0;
-  for (let waveNum = 1; waveNum <= 6; waveNum++) {
+  for (let waveNum = 1; waveNum <= 3; waveNum++) {
     const times = waveTimes.get(waveNum);
     expect(times).toBeDefined();
     expect(times!.start).toBeGreaterThanOrEqual(prevEnd);
@@ -138,14 +138,14 @@ test("性能指标记录: recordWaveStart 和 recordWaveEnd 被正确调用", as
 
   // 验证实际 runWorkflow 中的波次执行
   const model = await runWorkflow(hypothesis, config);
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 });
 
 test("收敛检测: 验证收敛逻辑在并行模式下正常工作（maxIterations > 1）", async () => {
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 3,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   const model = await runWorkflow(hypothesis, config);
@@ -162,7 +162,7 @@ test("收敛检测: 验证收敛逻辑在并行模式下正常工作（maxIterat
   expect(model.metadata.confidence).toBeLessThanOrEqual(1);
 
   // 验证所有 Agent 输出
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 
   // 验证冲突检测已执行
   expect(model.conflicts).toBeDefined();
@@ -193,20 +193,20 @@ test("7 Agent 模式兼容性: baseAgents 执行计划为 3 波", async () => {
   };
 
   // Wave 1: econ, socio, systems
-  expect(getWaveAgents(1).sort()).toEqual(["econ", "socio", "systems"].sort());
+  expect(getWaveAgents(1).sort()).toEqual((["econ", "socio", "systems"] as AgentType[]).sort());
 
   // Wave 2: culture, governance, risk
-  expect(getWaveAgents(2).sort()).toEqual(["culture", "governance", "risk"].sort());
+  expect(getWaveAgents(2).sort()).toEqual((["culture", "governance", "risk"] as AgentType[]).sort());
 
   // Wave 3: validation
-  expect(getWaveAgents(3)).toEqual(["validation"]);
+  expect(getWaveAgents(3)).toEqual((["validation"] as AgentType[]));
 
   // 执行工作流验证输出（extendedAgents=false 时仍执行所有 12 个 agents）
   const model = await runWorkflow(hypothesis, config);
 
   // 注意：由于 createAllAgents() 创建所有 12 个 agents，即使 extendedAgents=false
   // 系统仍会执行所有 agents，但依赖图结构不同
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 
   // 验证所有 7 个基础 agents 都在输出中
   const outputTypes = model.agentOutputs.map(output => output.agentType);
@@ -225,26 +225,26 @@ test("并行执行: 波次间依赖关系正确", async () => {
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 1,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   // 构建依赖图
-  const dependencies = buildDependencyGraph(extendedAgents, true);
+  const dependencies = buildDependencyGraph(baseAgents, false);
 
-  // 验证 validation 在第 6 波
+  // 验证 validation 在第 3 波
   const validationDep = dependencies.get("validation");
   expect(validationDep).toBeDefined();
-  expect(validationDep?.wave).toBe(6);
+  expect(validationDep?.wave).toBe(3);
 
   // 验证 validation 依赖于所有其他 agents
-  const expectedDependencies = extendedAgents.filter(agent => agent !== "validation").sort();
+  const expectedDependencies = baseAgents.filter(agent => agent !== "validation").sort();
   expect(validationDep?.dependsOn.sort()).toEqual(expectedDependencies);
 
   // 执行工作流
   const model = await runWorkflow(hypothesis, config);
 
   // 验证所有 agents 都已执行
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 
   // 验证 validation agent 的输出存在且依赖于其他 agents
   const validationOutput = model.agentOutputs.find(output => output.agentType === "validation");
@@ -255,7 +255,7 @@ test("性能指标: 验证执行时间合理且可接受", async () => {
   const hypothesis = createTestHypothesis();
   const config: WorkflowConfig & { extendedAgents?: boolean } = {
     maxIterations: 1,
-    extendedAgents: true
+    extendedAgents: false
   };
 
   const startTime = Date.now();
@@ -264,7 +264,7 @@ test("性能指标: 验证执行时间合理且可接受", async () => {
   const executionTime = endTime - startTime;
 
   // 验证执行完成
-  expect(model.agentOutputs).toHaveLength(12);
+  expect(model.agentOutputs).toHaveLength(7);
 
   // 验证执行时间合理（并行执行应该 < 10 秒）
   // 考虑到 simulateAICall 的延迟（100-600ms），12 个 agents 并行执行

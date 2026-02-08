@@ -111,6 +111,7 @@ export interface SystemStructure {
 export interface WorkflowConfig {
   maxIterations?: number;
   convergenceThreshold?: number;
+  extendedAgents?: boolean;
 }
 
 export interface WorkflowState {

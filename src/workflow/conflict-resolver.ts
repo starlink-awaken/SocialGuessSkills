@@ -71,7 +71,12 @@ function detectPriorityConflicts(outputs: AgentOutput[]): Conflict[] {
     governance: 4,
     culture: 2,
     risk: 5,
-    validation: 1
+    validation: 1,
+    environmental: 3,
+    demographic: 2,
+    infrastructure: 3,
+    technology: 2,
+    historical: 2
   };
 
   const suggestionGroups = new Map<string, AgentType[]>();

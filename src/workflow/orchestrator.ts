@@ -33,8 +33,14 @@ export async function runWorkflow(
   hypothesis: Hypothesis,
   options: WorkflowConfig = {}
 ): Promise<SocialSystemModel> {
-  const hypothesisRepo = new HypothesisRepository();
-  const modelRepo = new ModelRepository();
+  let hypothesisRepo: HypothesisRepository | null = null;
+  let modelRepo: ModelRepository | null = null;
+  try {
+    hypothesisRepo = new HypothesisRepository();
+    modelRepo = new ModelRepository();
+  } catch {
+    logger.warn("Database not available, model persistence disabled");
+  }
   const maxIterations = options.maxIterations ?? 3;
   const convergenceThreshold = clampConvergenceThreshold(options.convergenceThreshold ?? 0.9);
 
@@ -48,7 +54,8 @@ export async function runWorkflow(
     maxIterations,
     agentResults: new Map(),
     conflicts: [],
-    history: []
+    history: [],
+    failures: []
   };
 
   const agents = await createAllAgents();
@@ -58,8 +65,13 @@ export async function runWorkflow(
   let finalSimilarity: number | undefined = undefined;
 
   const persistModel = async (model: SocialSystemModel): Promise<void> => {
-    const hypothesisRecord = await hypothesisRepo.save(hypothesis);
-    modelRepo.save(hypothesisRecord.id, hypothesisRecord.hash, model);
+    if (!hypothesisRepo || !modelRepo) return;
+    try {
+      const hypothesisRecord = await hypothesisRepo.save(hypothesis);
+      modelRepo.save(hypothesisRecord.id, hypothesisRecord.hash, model);
+    } catch (err) {
+      logger.warn({ err }, "Failed to persist model to database");
+    }
   };
 
   for (let iteration = 1; iteration <= maxIterations; iteration++) {

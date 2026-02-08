@@ -133,7 +133,7 @@ function mergeDeep<T>(target: T, source: Partial<T>): T {
     const targetValue = result[key];
 
     if (isObject(sourceValue) && isObject(targetValue)) {
-      result[key] = mergeDeep(targetValue, sourceValue);
+      result[key] = mergeDeep(targetValue, sourceValue as any);
     } else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
       result[key] = [...sourceValue] as any;
     } else {
