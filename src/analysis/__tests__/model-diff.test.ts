@@ -106,7 +106,28 @@ function createTestModel(overrides?: Partial<SocialSystemModel>): SocialSystemMo
         indicators: ['指标1'],
         mechanisms: ['机制1'],
         decisionLoop: ['决策循环1']
-      }
+      },
+    security: {
+      territorialDefense: [],
+      militaryStrategy: [],
+      allianceNetwork: [],
+      conflictResolution: [],
+      deterrence: [],
+    },
+    identity: {
+      ethnicRelations: [],
+      religiousHarmony: [],
+      culturalIntegration: [],
+      minorityProtection: [],
+      identityNarrative: [],
+    },
+    resilience: {
+      disasterPreparedness: [],
+      emergencyResponse: [],
+      recoveryMechanism: [],
+      earlyWarning: [],
+      communityResilience: [],
+    },
     },
     metadata: {
       iterations: 2,
@@ -327,7 +348,28 @@ describe('diffModels', () => {
           indicators: ['指标1'],
           mechanisms: ['机制1'],
           decisionLoop: ['决策循环1']
-        }
+        },
+    security: {
+      territorialDefense: [],
+      militaryStrategy: [],
+      allianceNetwork: [],
+      conflictResolution: [],
+      deterrence: [],
+    },
+    identity: {
+      ethnicRelations: [],
+      religiousHarmony: [],
+      culturalIntegration: [],
+      minorityProtection: [],
+      identityNarrative: [],
+    },
+    resilience: {
+      disasterPreparedness: [],
+      emergencyResponse: [],
+      recoveryMechanism: [],
+      earlyWarning: [],
+      communityResilience: [],
+    },
       }
     });
 
@@ -605,7 +647,10 @@ describe('diffStructure', () => {
         innovation: modelA.structure.innovation,
         risks: modelA.structure.risks,
         metrics: modelA.structure.metrics,
-        optimization: modelA.structure.optimization
+        optimization: modelA.structure.optimization,
+        security: modelA.structure.security,
+        identity: modelA.structure.identity,
+        resilience: modelA.structure.resilience,
       }
     });
 
@@ -634,7 +679,10 @@ describe('diffStructure', () => {
         innovation: modelA.structure.innovation,
         risks: modelA.structure.risks,
         metrics: modelA.structure.metrics,
-        optimization: modelA.structure.optimization
+        optimization: modelA.structure.optimization,
+        security: modelA.structure.security,
+        identity: modelA.structure.identity,
+        resilience: modelA.structure.resilience,
       }
     });
 
@@ -761,7 +809,28 @@ describe('边界情况', () => {
           indicators: [],
           mechanisms: [],
           decisionLoop: []
-        }
+        },
+    security: {
+      territorialDefense: [],
+      militaryStrategy: [],
+      allianceNetwork: [],
+      conflictResolution: [],
+      deterrence: [],
+    },
+    identity: {
+      ethnicRelations: [],
+      religiousHarmony: [],
+      culturalIntegration: [],
+      minorityProtection: [],
+      identityNarrative: [],
+    },
+    resilience: {
+      disasterPreparedness: [],
+      emergencyResponse: [],
+      recoveryMechanism: [],
+      earlyWarning: [],
+      communityResilience: [],
+    },
       }
     });
     const modelB = createTestModel({

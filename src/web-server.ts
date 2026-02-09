@@ -113,6 +113,48 @@ const AGENT_META: Record<
     priority: 2,
     category: "extended",
   },
+  geopolitics: {
+    name: "地缘政治Agent",
+    icon: "🌍",
+    color: "#dc2626",
+    priority: 4,
+    category: "advanced",
+  },
+  ethnicity: {
+    name: "种族民族Agent",
+    icon: "🤝",
+    color: "#7c3aed",
+    priority: 3,
+    category: "advanced",
+  },
+  religion: {
+    name: "宗教信仰Agent",
+    icon: "🕊️",
+    color: "#c084fc",
+    priority: 3,
+    category: "advanced",
+  },
+  military: {
+    name: "军事战争Agent",
+    icon: "🛡️",
+    color: "#991b1b",
+    priority: 5,
+    category: "advanced",
+  },
+  disaster: {
+    name: "自然灾害Agent",
+    icon: "🌋",
+    color: "#ea580c",
+    priority: 4,
+    category: "advanced",
+  },
+  emergency: {
+    name: "突发事件Agent",
+    icon: "🚨",
+    color: "#b91c1c",
+    priority: 5,
+    category: "advanced",
+  },
 };
 
 // CORS headers
@@ -195,6 +237,27 @@ function synthesizeStructure(outputs: AgentOutput[]): SystemStructure {
       mechanisms: [],
       decisionLoop: [],
     },
+    security: {
+      territorialDefense: [],
+      militaryStrategy: [],
+      allianceNetwork: [],
+      conflictResolution: [],
+      deterrence: [],
+    },
+    identity: {
+      ethnicRelations: [],
+      religiousHarmony: [],
+      culturalIntegration: [],
+      minorityProtection: [],
+      identityNarrative: [],
+    },
+    resilience: {
+      disasterPreparedness: [],
+      emergencyResponse: [],
+      recoveryMechanism: [],
+      earlyWarning: [],
+      communityResilience: [],
+    },
   };
 
   // Aggregate evidence/suggestions/risks from all agents
@@ -268,6 +331,7 @@ async function runWorkflowWithEvents(
   const maxIterations = options.maxIterations ?? 3;
   const convergenceThreshold = options.convergenceThreshold ?? 0.9;
   const extendedAgents = options.extendedAgents ?? false;
+  const advancedAgents = (options as Record<string, unknown>).advancedAgents as boolean ?? false;
 
   try {
     // Step 0: Workflow Start
@@ -305,7 +369,7 @@ async function runWorkflowWithEvents(
       status: "running",
     });
 
-    const agents = await createAllAgents({ extended: extendedAgents });
+    const agents = await createAllAgents({ extended: extendedAgents, advanced: advancedAgents });
     const agentTypes = Array.from(agents.keys());
 
     stream.send("step", {

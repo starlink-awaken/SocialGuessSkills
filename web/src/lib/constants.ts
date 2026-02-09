@@ -13,6 +13,12 @@ export const AGENT_COLORS: Record<AgentType, string> = {
   infrastructure: '#64748b',
   technology: '#0ea5e9',
   historical: '#d97706',
+  geopolitics: '#dc2626',
+  ethnicity: '#7c3aed',
+  religion: '#c084fc',
+  military: '#991b1b',
+  disaster: '#ea580c',
+  emergency: '#b91c1c',
 };
 
 export const AGENT_ICONS: Record<AgentType, string> = {
@@ -28,6 +34,12 @@ export const AGENT_ICONS: Record<AgentType, string> = {
   infrastructure: '🏗️',
   technology: '💻',
   historical: '📜',
+  geopolitics: '🌍',
+  ethnicity: '🤝',
+  religion: '🕊️',
+  military: '🛡️',
+  disaster: '🌋',
+  emergency: '🚨',
 };
 
 export const AGENT_NAMES: Record<AgentType, string> = {
@@ -43,11 +55,18 @@ export const AGENT_NAMES: Record<AgentType, string> = {
   infrastructure: '基础设施',
   technology: '技术',
   historical: '历史',
+  geopolitics: '地缘政治',
+  ethnicity: '种族民族',
+  religion: '宗教信仰',
+  military: '军事战争',
+  disaster: '自然灾害',
+  emergency: '突发事件',
 };
 
 export const CORE_AGENTS: AgentType[] = ['systems', 'econ', 'socio', 'governance', 'culture', 'risk', 'validation'];
 export const EXTENDED_AGENTS: AgentType[] = ['environmental', 'demographic', 'infrastructure', 'technology', 'historical'];
-export const ALL_AGENTS: AgentType[] = [...CORE_AGENTS, ...EXTENDED_AGENTS];
+export const ADVANCED_AGENTS: AgentType[] = ['geopolitics', 'ethnicity', 'religion', 'military', 'disaster', 'emergency'];
+export const ALL_AGENTS: AgentType[] = [...CORE_AGENTS, ...EXTENDED_AGENTS, ...ADVANCED_AGENTS];
 
 export const SEVERITY_COLORS = {
   low: '#22c55e',
@@ -83,4 +102,7 @@ export const STRUCTURE_LAYERS = [
   { key: 'risks', name: '风险控制', icon: '🛡️', color: '#ef4444' },
   { key: 'metrics', name: '指标体系', icon: '📊', color: '#22c55e' },
   { key: 'optimization', name: '优化机制', icon: '🎯', color: '#a855f7' },
+  { key: 'security', name: '安全防御', icon: '⚔️', color: '#dc2626' },
+  { key: 'identity', name: '身份认同', icon: '🤝', color: '#7c3aed' },
+  { key: 'resilience', name: '韧性恢复', icon: '🌋', color: '#ea580c' },
 ];

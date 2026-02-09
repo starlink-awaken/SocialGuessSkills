@@ -57,14 +57,13 @@ export interface ExecutionPlan {
 }
 
 /**
- * 基础 Agent 依赖规则(12 Agent 系统)
+ * 基础 Agent 依赖规则(18 Agent 系统)
  *
- * Wave 1: systems, econ, socio (无依赖,可并行)
- * Wave 2: governance, culture, risk (依赖 Wave 1)
- * Wave 3: 空 (12 Agent模式中的gap)
- * Wave 4: environmental, demographic, infrastructure (依赖 Wave 1-2)
- * Wave 5: technology, historical (依赖 Wave 4)
- * Wave 6: validation (依赖 Wave 1-5)
+ * Wave 1: systems, econ, socio (no deps)
+ * Wave 2: governance, culture, risk (depends on Wave 1)
+ * Wave 4: environmental, demographic, infrastructure, military (depends on Wave 1-2)
+ * Wave 5: technology, historical, geopolitics, ethnicity, religion, disaster (depends on Wave 1-4)
+ * Wave 6: validation, emergency (depends on Wave 1-5)
  */
 const BASE_AGENT_DEPENDENCIES: Partial<Record<AgentType, AgentDependency>> = {
   systems: { agent: "systems", dependsOn: [], wave: 1 },
@@ -76,9 +75,15 @@ const BASE_AGENT_DEPENDENCIES: Partial<Record<AgentType, AgentDependency>> = {
   environmental: { agent: "environmental", dependsOn: ["systems", "econ", "socio", "governance"], wave: 4 },
   demographic: { agent: "demographic", dependsOn: ["systems", "econ", "socio", "culture"], wave: 4 },
   infrastructure: { agent: "infrastructure", dependsOn: ["systems", "econ", "socio"], wave: 4 },
+  military: { agent: "military", dependsOn: ["systems", "governance", "risk"], wave: 4 },
   technology: { agent: "technology", dependsOn: ["systems", "econ", "socio"], wave: 5 },
   historical: { agent: "historical", dependsOn: ["systems", "econ", "socio"], wave: 5 },
-  validation: { agent: "validation", dependsOn: ["systems", "econ", "socio", "governance", "culture", "risk", "environmental", "demographic", "infrastructure", "technology", "historical"], wave: 6 }
+  geopolitics: { agent: "geopolitics", dependsOn: ["systems", "governance", "military"], wave: 5 },
+  ethnicity: { agent: "ethnicity", dependsOn: ["socio", "culture", "demographic"], wave: 5 },
+  religion: { agent: "religion", dependsOn: ["culture", "governance"], wave: 5 },
+  disaster: { agent: "disaster", dependsOn: ["environmental", "infrastructure", "risk"], wave: 5 },
+  emergency: { agent: "emergency", dependsOn: ["risk", "governance", "disaster"], wave: 6 },
+  validation: { agent: "validation", dependsOn: ["systems", "econ", "socio", "governance", "culture", "risk", "environmental", "demographic", "infrastructure", "technology", "historical", "geopolitics", "ethnicity", "religion", "military", "disaster", "emergency"], wave: 6 }
 };
 
 /**

@@ -1,4 +1,10 @@
-export type AgentType = 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation' | 'environmental' | 'demographic' | 'infrastructure' | 'technology' | 'historical';
+export type AgentType =
+  // Core agents (7)
+  | 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation'
+  // Extended agents (5)
+  | 'environmental' | 'demographic' | 'infrastructure' | 'technology' | 'historical'
+  // Advanced agents (6) - geopolitics, ethnicity, religion, military, disaster, emergency
+  | 'geopolitics' | 'ethnicity' | 'religion' | 'military' | 'disaster' | 'emergency';
 
 export interface Hypothesis {
   assumptions: string[];
@@ -105,6 +111,27 @@ export interface SystemStructure {
     indicators: string[];
     mechanisms: string[];
     decisionLoop: string[];
+  };
+  security: {
+    territorialDefense: string[];
+    militaryStrategy: string[];
+    allianceNetwork: string[];
+    conflictResolution: string[];
+    deterrence: string[];
+  };
+  identity: {
+    ethnicRelations: string[];
+    religiousHarmony: string[];
+    culturalIntegration: string[];
+    minorityProtection: string[];
+    identityNarrative: string[];
+  };
+  resilience: {
+    disasterPreparedness: string[];
+    emergencyResponse: string[];
+    recoveryMechanism: string[];
+    earlyWarning: string[];
+    communityResilience: string[];
   };
 }
 

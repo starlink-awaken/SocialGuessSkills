@@ -23,6 +23,12 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
     ["risk", "econ", "风险规避与经济增长之间存在取舍"],
     ["technology", "historical", "技术颠覆与历史路径依赖之间存在冲突"],
     ["infrastructure", "environmental", "基础设施扩张与生态保护之间需要协调"],
+    ["military", "econ", "军事投入与经济发展之间存在资源竞争"],
+    ["religion", "governance", "宗教权威与世俗治理之间存在权力边界张力"],
+    ["ethnicity", "culture", "族群特殊性保护与文化统一性之间需要平衡"],
+    ["geopolitics", "socio", "地缘战略考量可能压制社会福利优先级"],
+    ["disaster", "infrastructure", "灾后重建需求与日常基础设施投资之间存在资源竞争"],
+    ["emergency", "governance", "紧急状态下的集中权力与常态治理的分权原则存在冲突"],
   ];
 
   const conclusionKeywords: Record<AgentType, string[]> = {
@@ -37,7 +43,13 @@ function detectLogicalConflicts(outputs: AgentOutput[]): Conflict[] {
     demographic: ["人口", "迁移", "老龄化"],
     infrastructure: ["基础设施", "网络", "承载力"],
     technology: ["技术", "创新", "自动化"],
-    historical: ["历史", "先例", "演变"]
+    historical: ["历史", "先例", "演变"],
+    geopolitics: ["地缘", "领土", "联盟"],
+    ethnicity: ["族群", "民族", "认同"],
+    religion: ["信仰", "教义", "世俗"],
+    military: ["防御", "武力", "威慑"],
+    disaster: ["灾害", "预警", "救援"],
+    emergency: ["应急", "危机", "响应"]
   };
 
   // Negation indicators in falsifiable statements
@@ -129,7 +141,13 @@ function detectPriorityConflicts(outputs: AgentOutput[]): Conflict[] {
     demographic: 2,
     infrastructure: 3,
     technology: 2,
-    historical: 2
+    historical: 2,
+    geopolitics: 4,
+    ethnicity: 3,
+    religion: 3,
+    military: 5,
+    disaster: 4,
+    emergency: 5
   };
 
   const suggestionGroups = new Map<string, AgentType[]>();
@@ -253,7 +271,13 @@ function detectGoalConflicts(outputs: AgentOutput[]): Conflict[] {
     demographic: ["均衡", "适龄", "人口红利"],
     infrastructure: ["互联互通", "冗余", "升级"],
     technology: ["数字化", "智能化", "颠覆"],
-    historical: ["延续", "复兴", "借鉴"]
+    historical: ["延续", "复兴", "借鉴"],
+    geopolitics: ["战略自主", "缓冲", "外交平衡"],
+    ethnicity: ["融合", "多元", "平等权利"],
+    religion: ["信仰自由", "政教分离", "宗教和谐"],
+    military: ["安全", "防御", "文官控制"],
+    disaster: ["防灾", "减灾", "恢复"],
+    emergency: ["快速响应", "韧性", "预案"]
   };
 
   for (let i = 0; i < outputs.length; i++) {
@@ -312,7 +336,13 @@ function detectConstraintConflicts(outputs: AgentOutput[]): Conflict[] {
     demographic: ["人口容量", "承载极限", "迁移配额"],
     infrastructure: ["承载上限", "维护周期", "冗余要求"],
     technology: ["技术成熟度", "兼容性", "安全审计"],
-    historical: ["历史教训", "制度惯性", "路径依赖"]
+    historical: ["历史教训", "制度惯性", "路径依赖"],
+    geopolitics: ["地缘格局", "领土完整", "联盟义务"],
+    ethnicity: ["族群比例", "文化权利", "反歧视"],
+    religion: ["信仰边界", "宗教法", "世俗原则"],
+    military: ["武力边界", "军民比例", "防卫预算"],
+    disaster: ["灾害等级", "响应时限", "储备标准"],
+    emergency: ["应急等级", "触发条件", "恢复期限"]
   };
 
   for (let i = 0; i < outputs.length; i++) {

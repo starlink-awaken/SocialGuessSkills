@@ -331,6 +331,27 @@ function synthesizeStructure(outputs: AgentOutput[]): SystemStructure {
       indicators: extractFromOutputs(outputs, ["指标", "测量", "评估"]),
       mechanisms: extractFromOutputs(outputs, ["机制", "流程", "程序"]),
       decisionLoop: extractFromOutputs(outputs, ["决策", "循环", "反馈"])
+    },
+    security: {
+      territorialDefense: extractFromOutputs(outputs, ["领土", "防御", "边界"]),
+      militaryStrategy: extractFromOutputs(outputs, ["军事", "战略", "武力"]),
+      allianceNetwork: extractFromOutputs(outputs, ["联盟", "外交", "同盟"]),
+      conflictResolution: extractFromOutputs(outputs, ["冲突解决", "和谈", "调停"]),
+      deterrence: extractFromOutputs(outputs, ["威慑", "制衡", "抑制"])
+    },
+    identity: {
+      ethnicRelations: extractFromOutputs(outputs, ["族群", "民族", "种族"]),
+      religiousHarmony: extractFromOutputs(outputs, ["宗教", "信仰", "教义"]),
+      culturalIntegration: extractFromOutputs(outputs, ["融合", "多元", "包容"]),
+      minorityProtection: extractFromOutputs(outputs, ["少数", "权利保障", "反歧视"]),
+      identityNarrative: extractFromOutputs(outputs, ["身份认同", "叙事", "归属"])
+    },
+    resilience: {
+      disasterPreparedness: extractFromOutputs(outputs, ["灾害", "预警", "防灾"]),
+      emergencyResponse: extractFromOutputs(outputs, ["应急", "响应", "救援"]),
+      recoveryMechanism: extractFromOutputs(outputs, ["恢复", "重建", "复原"]),
+      earlyWarning: extractFromOutputs(outputs, ["预警", "监测", "早期"]),
+      communityResilience: extractFromOutputs(outputs, ["韧性", "抗压", "适应"])
     }
   };
 }

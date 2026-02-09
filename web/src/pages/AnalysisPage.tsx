@@ -47,6 +47,7 @@ export function AnalysisPage() {
   const [progress, setProgress] = useState<WorkflowProgress>(createInitialProgress());
   const [showForm, setShowForm] = useState(true);
   const [useExtended, setUseExtended] = useState(false);
+  const [useAdvanced, setUseAdvanced] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
 
   const handleEvent = useCallback((event: SSEEvent) => {
@@ -119,14 +120,14 @@ export function AnalysisPage() {
 
     const controller = startAnalysis(
       hypothesis,
-      { maxIterations: 3, extendedAgents: useExtended },
+      { maxIterations: 3, extendedAgents: useExtended || useAdvanced, advancedAgents: useAdvanced },
       handleEvent,
       () => {},
       (err) => setProgress(p => ({ ...p, status: 'error', error: err.message })),
     );
 
     controllerRef.current = controller;
-  }, [hypothesis, useExtended, handleEvent]);
+  }, [hypothesis, useExtended, useAdvanced, handleEvent]);
 
   const handleStop = () => {
     controllerRef.current?.abort();
@@ -223,9 +224,15 @@ export function AnalysisPage() {
             <div className="form-footer">
               <label className="checkbox-label">
                 <input type="checkbox" checked={useExtended}
-                  onChange={e => setUseExtended(e.target.checked)}
+                  onChange={e => { setUseExtended(e.target.checked); if (!e.target.checked) setUseAdvanced(false); }}
                   disabled={progress.status === 'running'} />
                 启用扩展Agent (12个)
+              </label>
+              <label className="checkbox-label">
+                <input type="checkbox" checked={useAdvanced}
+                  onChange={e => { setUseAdvanced(e.target.checked); if (e.target.checked) setUseExtended(true); }}
+                  disabled={progress.status === 'running'} />
+                启用高级Agent (18个: +地缘/种族/宗教/军事/灾害/突发)
               </label>
             </div>
           </div>
@@ -271,6 +278,7 @@ export function AnalysisPage() {
                 completedAgents={completedAgents}
                 conflicts={progress.conflicts}
                 showExtended={useExtended}
+                showAdvanced={useAdvanced}
               />
             </div>
           </div>

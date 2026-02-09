@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Cpu, Zap, Layers, GitBranch } from 'lucide-react';
 import { AgentNetwork } from '../components/visualizations/AgentNetwork';
-import { CORE_AGENTS, EXTENDED_AGENTS, WORKFLOW_STEPS, STRUCTURE_LAYERS } from '../lib/constants';
+import { CORE_AGENTS, EXTENDED_AGENTS, ADVANCED_AGENTS, WORKFLOW_STEPS, STRUCTURE_LAYERS } from '../lib/constants';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -10,14 +10,14 @@ export function Dashboard() {
     <div className="dashboard">
       <div className="page-header">
         <h2>系统总览</h2>
-        <p className="subtitle">多Agent社会体系推演框架 · 7核心 + 5扩展Agent</p>
+        <p className="subtitle">多Agent社会体系推演框架 · 7核心 + 5扩展 + 6高级Agent</p>
       </div>
 
       <div className="stats-row">
         <div className="stat-card glow-blue">
           <Cpu size={24} />
           <div>
-            <div className="stat-value">{CORE_AGENTS.length + EXTENDED_AGENTS.length}</div>
+            <div className="stat-value">{CORE_AGENTS.length + EXTENDED_AGENTS.length + ADVANCED_AGENTS.length}</div>
             <div className="stat-label">Agent 总数</div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export function Dashboard() {
 
         <div className="card layers-card">
           <div className="card-header">
-            <h3>📐 9层模型架构</h3>
+            <h3>📐 {STRUCTURE_LAYERS.length}层模型架构</h3>
           </div>
           <div className="layers-grid">
             {STRUCTURE_LAYERS.map(layer => (

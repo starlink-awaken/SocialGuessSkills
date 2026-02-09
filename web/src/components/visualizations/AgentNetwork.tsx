@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AgentType, Conflict } from '../../types';
-import { CORE_AGENTS, EXTENDED_AGENTS, AGENT_COLORS, AGENT_ICONS, AGENT_NAMES } from '../../lib/constants';
+import { CORE_AGENTS, EXTENDED_AGENTS, ADVANCED_AGENTS, AGENT_COLORS, AGENT_ICONS, AGENT_NAMES } from '../../lib/constants';
 
 interface Props {
   activeAgents?: Set<AgentType>;
   completedAgents?: Set<AgentType>;
   conflicts?: Conflict[];
   showExtended?: boolean;
+  showAdvanced?: boolean;
 }
 
 interface NodePos { x: number; y: number; type: AgentType }
 
-export function AgentNetwork({ activeAgents, completedAgents, conflicts, showExtended = false }: Props) {
+export function AgentNetwork({ activeAgents, completedAgents, conflicts, showExtended = false, showAdvanced = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredAgent, setHoveredAgent] = useState<AgentType | null>(null);
   const [time, setTime] = useState(0);
@@ -24,19 +25,28 @@ export function AgentNetwork({ activeAgents, completedAgents, conflicts, showExt
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const agents = showExtended ? [...CORE_AGENTS, ...EXTENDED_AGENTS] : CORE_AGENTS;
-  const cx = 200, cy = 180;
-  const coreR = 120, extR = 170;
+  const agents = showAdvanced
+    ? [...CORE_AGENTS, ...EXTENDED_AGENTS, ...ADVANCED_AGENTS]
+    : showExtended ? [...CORE_AGENTS, ...EXTENDED_AGENTS] : CORE_AGENTS;
+  const cx = 200, cy = showAdvanced ? 210 : 180;
+  const coreR = showAdvanced ? 90 : 120, extR = showAdvanced ? 145 : 170, advR = 195;
 
   const nodes: NodePos[] = CORE_AGENTS.map((type, i) => {
     const angle = (i / CORE_AGENTS.length) * Math.PI * 2 - Math.PI / 2;
     return { x: cx + Math.cos(angle) * coreR, y: cy + Math.sin(angle) * coreR, type };
   });
 
-  if (showExtended) {
+  if (showExtended || showAdvanced) {
     EXTENDED_AGENTS.forEach((type, i) => {
       const angle = (i / EXTENDED_AGENTS.length) * Math.PI * 2 - Math.PI / 2 + 0.3;
       nodes.push({ x: cx + Math.cos(angle) * extR, y: cy + Math.sin(angle) * extR, type });
+    });
+  }
+
+  if (showAdvanced) {
+    ADVANCED_AGENTS.forEach((type, i) => {
+      const angle = (i / ADVANCED_AGENTS.length) * Math.PI * 2 - Math.PI / 2 + 0.5;
+      nodes.push({ x: cx + Math.cos(angle) * advR, y: cy + Math.sin(angle) * advR, type });
     });
   }
 
@@ -57,7 +67,7 @@ export function AgentNetwork({ activeAgents, completedAgents, conflicts, showExt
   });
 
   return (
-    <svg ref={svgRef} viewBox="0 0 400 360" className="agent-network-svg">
+    <svg ref={svgRef} viewBox={showAdvanced ? "0 0 400 420" : "0 0 400 360"} className="agent-network-svg">
       <defs>
         <radialGradient id="bg-glow">
           <stop offset="0%" stopColor="rgba(59,130,246,0.08)" />

@@ -1,6 +1,9 @@
 // Aligned with backend src/types.ts
 
-export type AgentType = 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation' | 'environmental' | 'demographic' | 'infrastructure' | 'technology' | 'historical';
+export type AgentType =
+  | 'systems' | 'econ' | 'socio' | 'governance' | 'culture' | 'risk' | 'validation'
+  | 'environmental' | 'demographic' | 'infrastructure' | 'technology' | 'historical'
+  | 'geopolitics' | 'ethnicity' | 'religion' | 'military' | 'disaster' | 'emergency';
 
 export interface Hypothesis {
   assumptions: string[];
@@ -36,6 +39,9 @@ export interface SystemStructure {
   risks: Record<string, string[]>;
   metrics: Record<string, string[]>;
   optimization: Record<string, string[]>;
+  security: Record<string, string[]>;
+  identity: Record<string, string[]>;
+  resilience: Record<string, string[]>;
 }
 
 export interface SocialSystemModel {
@@ -58,7 +64,7 @@ export interface AgentMeta {
   icon: string;
   color: string;
   priority: number;
-  category: 'core' | 'extended';
+  category: 'core' | 'extended' | 'advanced';
 }
 
 // SSE event types

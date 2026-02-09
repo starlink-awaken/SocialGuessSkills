@@ -14,6 +14,10 @@ const EXTENDED_AGENT_TYPES: AgentType[] = [
   "environmental", "demographic", "infrastructure", "technology", "historical"
 ];
 
+const ADVANCED_AGENT_TYPES: AgentType[] = [
+  "geopolitics", "ethnicity", "religion", "military", "disaster", "emergency"
+];
+
 const agentNames: Record<AgentType, string> = {
   systems: "Systems Agent",
   econ: "Econ Agent",
@@ -26,7 +30,13 @@ const agentNames: Record<AgentType, string> = {
   demographic: "Demographic Agent",
   infrastructure: "Infrastructure Agent",
   technology: "Technology Agent",
-  historical: "Historical Agent"
+  historical: "Historical Agent",
+  geopolitics: "Geopolitics Agent",
+  ethnicity: "Ethnicity Agent",
+  religion: "Religion Agent",
+  military: "Military Agent",
+  disaster: "Disaster Agent",
+  emergency: "Emergency Agent"
 };
 
 export async function loadPrompt(agentType: AgentType): Promise<string> {
@@ -58,16 +68,20 @@ export async function createAgent(agentType: AgentType): Promise<AgentInstance> 
 }
 
 export interface CreateAllAgentsOptions {
-  /** Include extended agents (environmental, demographic, infrastructure, technology, historical) */
+  /** Include extended agents (environmental...historical) AND advanced agents (geopolitics...emergency) */
   extended?: boolean;
+  /** Include advanced agents (geopolitics, ethnicity, religion, military, disaster, emergency) */
+  advanced?: boolean;
 }
 
 export async function createAllAgents(
   options: CreateAllAgentsOptions = {}
 ): Promise<Map<AgentType, AgentInstance>> {
-  const types = options.extended
-    ? [...BASE_AGENT_TYPES, ...EXTENDED_AGENT_TYPES]
-    : BASE_AGENT_TYPES;
+  const types = options.advanced
+    ? [...BASE_AGENT_TYPES, ...EXTENDED_AGENT_TYPES, ...ADVANCED_AGENT_TYPES]
+    : options.extended
+      ? [...BASE_AGENT_TYPES, ...EXTENDED_AGENT_TYPES]
+      : BASE_AGENT_TYPES;
 
   const results = await Promise.all(types.map(type => createAgent(type)));
   const agents = new Map<AgentType, AgentInstance>();
